@@ -72,7 +72,7 @@ return [
     |
     */
 
-    'brand' => env('APP_NAME'),
+    'brand' => 'HKI',
 
     /*
     |--------------------------------------------------------------------------
@@ -252,7 +252,7 @@ return [
             'groups' => [
                 'are_collapsible' => true,
             ],
-            'width' => 'auto',
+            'width' => null,
         ],
     ],
 
