@@ -49,5 +49,11 @@ class FortifyServiceProvider extends ServiceProvider
             \Laravel\Fortify\Contracts\LoginResponse::class,
             \App\Actions\Fortify\LoginResponse::class
         );
+
+        // Register kustom RegisterResponse
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\RegisterResponse::class,
+            \App\Actions\Fortify\RegisterResponse::class
+        );
     }
 }
