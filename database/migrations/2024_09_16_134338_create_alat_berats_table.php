@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('merk_alat', 35);
             $table->string('tipe_alat', 20);
             $table->year('tahun_produksi');
-            $table->string('foto_sio');
-            $table->string('foto_silo');
             $table->timestamps();
         });
     }

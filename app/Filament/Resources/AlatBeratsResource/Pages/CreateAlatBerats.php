@@ -9,4 +9,5 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateAlatBerats extends CreateRecord
 {
     protected static string $resource = AlatBeratsResource::class;
+    
 }
