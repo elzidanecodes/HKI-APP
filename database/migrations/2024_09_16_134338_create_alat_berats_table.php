@@ -13,18 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('operator', function (Blueprint $table) {
-            $table->id('id_operator');
-            $table->string('nama_operator', 50);
-            $table->string('jenis_alat', 35);
+        Schema::create('alat_berats', function (Blueprint $table) {
+            $table->id('id_alat');
+            $table->string('nama_alat', 35);
             $table->string('merk_alat', 35);
             $table->string('tipe_alat', 20);
-            $table->date('tahun_produksi');
+            $table->year('tahun_produksi');
             $table->string('foto_sio');
             $table->string('foto_silo');
-            $table->string('nomer_hp', 15);
             $table->timestamps();
-
         });
     }
 
@@ -35,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('operators');
+        Schema::dropIfExists('alat_berats');
     }
 };
