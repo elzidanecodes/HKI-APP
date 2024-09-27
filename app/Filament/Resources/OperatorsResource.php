@@ -2,30 +2,23 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AlatBeratsResource\Pages;
-use App\Filament\Resources\AlatBeratsResource\RelationManagers;
-use App\Models\AlatBerats;
-use Filament\Forms;
+use App\Filament\Resources\OperatorsResource\Pages;
+use App\Models\Operators;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Storage;
 
-class AlatBeratsResource extends Resource
+class OperatorsResource extends Resource
 {
-    protected static ?string $model = AlatBerats::class;
-    
+    protected static ?string $model = Operators::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
@@ -33,9 +26,17 @@ class AlatBeratsResource extends Resource
     {
         return $form
             ->schema([
+                TextInput::make('nama_operator')
+                    ->label('Nama Operator')
+                    ->placeholder('Nama Operator')
+                    ->required(),
                 TextInput::make('nama_alat')
                     ->label('Nama Alat')
                     ->placeholder('Nama Alat')
+                    ->required(),
+                TextInput::make('nomor_silo')
+                    ->label('Nomor Silo')
+                    ->placeholder('Nomor Silo')
                     ->required(),
                 TextInput::make('merk_alat')
                     ->label('Merk Alat')
@@ -58,8 +59,11 @@ class AlatBeratsResource extends Resource
                 SpatieMediaLibraryFileUpload::make('foto_silo')
                     ->label('Foto SILO')
                     ->collection('silo') // Nama koleksi untuk media
-                    ->required() // Atur ini jika diperlukan
-                    
+                    ->required(),
+                TextInput::make('nomor_hp')
+                    ->label('Nomor HP')
+                    ->placeholder('Nomor HP')
+                    ->required(), // Atur ini jika diperlukan
             ]);
     }
 
@@ -77,7 +81,7 @@ class AlatBeratsResource extends Resource
                         );
                     }
                 ),
-                TextColumn::make('nomor_silo')
+                TextColumn::make('nama_operator')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('nama_alat')
@@ -92,33 +96,43 @@ class AlatBeratsResource extends Resource
                 TextColumn::make('tahun_produksi')
                     ->searchable()
                     ->sortable(),
-                SpatieMediaLibraryImageColumn::make('operators.foto_sio')
+                TextColumn::make('nomor_hp') 
+                    ->searchable()
+                    ->sortable(),
+                SpatieMediaLibraryImageColumn::make('foto_sio')
                     ->label('Foto SIO')
-                    ->collection('sio')
-                    ->getStateUsing(function ($record) {
-                        
-                        $operator = $record->operators->first(); // Ambil operator terkait
-                        return $operator ? $operator->getFirstMediaUrl('sio') : null;
-                    }),
-                SpatieMediaLibraryImageColumn::make('operators.foto_silo')
+                    ->collection('sio'),
+                SpatieMediaLibraryImageColumn::make('foto_silo')
                     ->label('Foto SILO')
-                    ->collection('silo')
-                    ->getStateUsing(function ($record) {
-                        
-                        $operator = $record->operators->first(); // Ambil operator terkait
-                        return $operator ? $operator->getFirstMediaUrl('silo') : null;
-                    })
-
-
+                    ->collection('silo'),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('') // Label tombol
+                    ->icon('heroicon-o-eye') // Ikon tombol,
+                    ->color('info'),
+                Tables\Actions\EditAction::make()
+                    ->label('')
+                    ->icon('heroicon-o-pencil')
+                    ->color('primary'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->successNotification(
+                        Notification::make()
+                        ->title('Data Operator Dihapus')
+                        ->body('Data operator telah berhasil dihapus.')
+                        ->success()
+                        
+                    ),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->label('Hapus'),
             ]);
     }
     
@@ -132,9 +146,10 @@ class AlatBeratsResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAlatBerats::route('/'),
-            'create' => Pages\CreateAlatBerats::route('/create'),
-            'edit' => Pages\EditAlatBerats::route('/{record}/edit'),
+            'index' => Pages\ListOperators::route('/'),
+            'create' => Pages\CreateOperators::route('/create'),
+            'edit' => Pages\EditOperators::route('/{record}/edit'),
+            'view' => Pages\ViewOperators::route('/{record}/view'),
         ];
     }    
 }
