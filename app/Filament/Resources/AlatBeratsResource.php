@@ -8,14 +8,19 @@ use App\Models\AlatBerats;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Storage;
 
 class AlatBeratsResource extends Resource
 {
@@ -44,15 +49,15 @@ class AlatBeratsResource extends Resource
                     ->displayFormat('Y') // Menampilkan hanya tahun
                     ->format('Y')        // Menyimpan hanya tahun ke dalam database
                     ->placeholder('Pilih tahun')
-                    ->required(), 
-                FileUpload::make('foto_sio')
-                    ->label('Foto SIO')
-                    ->image()
                     ->required(),
-                FileUpload::make('foto_silo') 
+                SpatieMediaLibraryFileUpload::make('foto_sio')
+                    ->label('Foto SIO')
+                    ->collection('sio') // Nama koleksi untuk media
+                    ->required(), // Atur ini jika diperlukan
+                SpatieMediaLibraryFileUpload::make('foto_silo')
                     ->label('Foto SILO')
-                    ->image()
-                    ->required()
+                    ->collection('silo') // Nama koleksi untuk media
+                    ->required(), // Atur ini jika diperlukan
             ]);
     }
 
@@ -60,9 +65,16 @@ class AlatBeratsResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id_alat')
-                    ->label('ID Alat')
-                    ->sortable(),
+                TextColumn::make('No')->getStateUsing(
+                    static function ( $rowLoop, HasTable $livewire): string {
+                        return (string) (
+                            $rowLoop->iteration +
+                            ($livewire->tableRecordsPerPage * (
+                                $livewire->page - 1
+                            ))
+                        );
+                    }
+                ),
                 TextColumn::make('nama_alat')
                     ->searchable()
                     ->sortable(),
@@ -75,12 +87,13 @@ class AlatBeratsResource extends Resource
                 TextColumn::make('tahun_produksi')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('foto_sio')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('foto_silo')
-                    ->searchable()
-                    ->sortable(),
+                SpatieMediaLibraryImageColumn::make('foto_sio')
+                ->label('Foto SIO')
+                ->collection('sio'),
+                SpatieMediaLibraryImageColumn::make('foto_silo')
+                ->label('Foto SILO')
+                ->collection('silo'),
+
 
             ])
             ->filters([
