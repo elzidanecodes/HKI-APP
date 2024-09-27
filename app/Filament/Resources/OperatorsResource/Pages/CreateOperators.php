@@ -38,7 +38,6 @@ class CreateOperators extends CreateRecord
         return [
             ButtonAction::make('submit')
                 ->label('Simpan Data Baru') // Ubah label tombol Create
-                ->action('create') // Tindakan create tetap dijalankan
                 ->color('primary') // Warna tombol tetap sama
                 ->submit('store'),  // Action tetap dikaitkan dengan penyimpanan
 
