@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('alat_berats', function (Blueprint $table) {
             $table->id('id_alat');
+            $table->unsignedBigInteger('nomor_silo')->unique();
             $table->string('nama_alat', 35);
             $table->string('merk_alat', 35);
             $table->string('tipe_alat', 20);

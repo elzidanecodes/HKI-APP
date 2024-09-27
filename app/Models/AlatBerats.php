@@ -9,12 +9,17 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class AlatBerats extends Model implements HasMedia
 {
-    use InteractsWithMedia;
+    use HasFactory, InteractsWithMedia;
     protected $primaryKey = 'id_alat';
     protected $fillable = [
+        'nomor_silo',
         'nama_alat',
         'merk_alat',
         'tipe_alat',
         'tahun_produksi',
     ];
+    public function operators()
+    {
+        return $this->hasMany(Operators::class, 'nomor_silo', 'nomor_silo');
+    }
 }
