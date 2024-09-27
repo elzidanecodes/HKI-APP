@@ -16,9 +16,10 @@ class ListOperators extends ListRecords
     protected function getActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Buat baru'),
             Actions\Action::make('export')
-                ->label('Export Excel')
+                ->label('Export ke Excel')
                 ->action(function () {
                     return Excel::download(new OperatorsExport, 'operators.xlsx');
                 }),
