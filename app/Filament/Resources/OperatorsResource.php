@@ -7,6 +7,7 @@ use App\Models\Operators;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
@@ -120,7 +121,14 @@ class OperatorsResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->label('')
                     ->icon('heroicon-o-trash')
-                    ->color('danger'),
+                    ->color('danger')
+                    ->successNotification(
+                        Notification::make()
+                        ->title('Data Operator Dihapus')
+                        ->body('Data operator telah berhasil dihapus.')
+                        ->success()
+                        
+                    ),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()

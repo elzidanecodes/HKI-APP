@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\OperatorsResource\Pages;
 
 use App\Filament\Resources\OperatorsResource;
+use Filament\Notifications\Notification;
 use Filament\Pages\Actions;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Pages\Actions\DeleteAction;
@@ -24,6 +25,14 @@ class EditOperators extends EditRecord
     protected function getTitle(): string
     {
         return 'Ubah Data Operator';
+    }
+
+    protected function getSavedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->title('Data Operator Diperbarui')
+            ->body('Data operator telah berhasil diperbarui.')
+            ->success();
     }
 
     // Override tombol default di form action

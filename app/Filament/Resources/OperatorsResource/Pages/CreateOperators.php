@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\OperatorsResource\Pages;
 
 use App\Filament\Resources\OperatorsResource;
+use Filament\Notifications\Notification;
 use Filament\Pages\Actions;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Pages\Actions\CreateAction;
@@ -21,6 +22,14 @@ class CreateOperators extends CreateRecord
     protected function getTitle(): string
     {
         return 'Tambah Data Operator';
+    }
+
+    protected function getCreatedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->title('Data Operator Ditambahkan')
+            ->body('Data operator telah berhasil ditambahkan.')
+            ->success();
     }
 
     // Mengubah label tombol Create
