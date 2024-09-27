@@ -17,7 +17,7 @@ class ListOperators extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Buat baru'),
+                ->label('Tambah Data Baru'),
             Actions\Action::make('export')
                 ->label('Export ke Excel')
                 ->action(function () {
