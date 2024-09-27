@@ -57,21 +57,21 @@ class OperatorsExport implements FromCollection, WithHeadings, WithDrawings, Sho
     {
         $drawings = [];
         foreach ($this->operators as $index => $operator) {
-            if ($operator->getFirstMediaUrl('sio')) {
+            if ($mediaSio = $operator->getFirstMedia('sio')) {
                 $drawing = new Drawing();
                 $drawing->setName('Foto SIO');
                 $drawing->setDescription('Foto SIO');
-                $drawing->setPath(public_path('storage/'. ($index +1).'/' . $operator->getFirstMedia('sio')->file_name));
+                $drawing->setPath(public_path('storage/'. $mediaSio->id.'/' . $operator->getFirstMedia('sio')->file_name));
                 $drawing->setHeight(80);
                 $drawing->setCoordinates('H' . ($index + 2));
                 $drawings[] = $drawing;
             }
 
-            if ($operator->getFirstMediaUrl('silo')) {
+            if ($mediaSilo = $operator->getFirstMedia('silo')) {
                 $drawing = new Drawing();
                 $drawing->setName('Foto Silo');
                 $drawing->setDescription('Foto Silo');
-                $drawing->setPath(public_path('storage/'. ($index+1).'/' . $operator->getFirstMedia('silo')->file_name));
+                $drawing->setPath(public_path('storage/'. $mediaSilo->id.'/' . $operator->getFirstMedia('silo')->file_name));
                 $drawing->setHeight(80);
                 $drawing->setCoordinates('I' . ($index + 2));
                 $drawings[] = $drawing;
