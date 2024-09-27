@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateOperators extends CreateRecord
 {
     protected static string $resource = OperatorsResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
