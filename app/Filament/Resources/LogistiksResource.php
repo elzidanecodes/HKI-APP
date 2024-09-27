@@ -7,6 +7,7 @@ use App\Filament\Resources\LogistiksResource\RelationManagers;
 use App\Models\Logistiks;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
@@ -85,7 +86,24 @@ class LogistiksResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('') // Label tombol
+                    ->icon('heroicon-o-eye') // Ikon tombol,
+                    ->color('info'),
+                Tables\Actions\EditAction::make()
+                    ->label('')
+                    ->icon('heroicon-o-pencil')
+                    ->color('primary'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->successNotification(
+                        Notification::make()
+                        ->title('Data Logistik Dihapus')
+                        ->body('Data logistik telah berhasil dihapus.')
+                        ->success()   
+                    ),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
@@ -105,6 +123,7 @@ class LogistiksResource extends Resource
             'index' => Pages\ListLogistiks::route('/'),
             'create' => Pages\CreateLogistiks::route('/create'),
             'edit' => Pages\EditLogistiks::route('/{record}/edit'),
+            'view' => Pages\ViewLogistiks::route('/{record}/view'),
         ];
     }    
 }
