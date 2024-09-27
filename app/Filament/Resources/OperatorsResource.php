@@ -3,9 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OperatorsResource\Pages;
-use App\Filament\Resources\OperatorsResource\RelationManagers;
 use App\Models\Operators;
-use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
@@ -16,8 +14,6 @@ use Filament\Tables;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class OperatorsResource extends Resource
 {
@@ -113,10 +109,22 @@ class OperatorsResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('') // Label tombol
+                    ->icon('heroicon-o-eye') // Ikon tombol,
+                    ->color('info'),
+                Tables\Actions\EditAction::make()
+                    ->label('')
+                    ->icon('heroicon-o-pencil')
+                    ->color('primary'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger'),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->label('Hapus'),
             ]);
     }
     
@@ -133,6 +141,7 @@ class OperatorsResource extends Resource
             'index' => Pages\ListOperators::route('/'),
             'create' => Pages\CreateOperators::route('/create'),
             'edit' => Pages\EditOperators::route('/{record}/edit'),
+            'view' => Pages\ViewOperators::route('/{record}/view'),
         ];
     }    
 }
