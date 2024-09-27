@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources\OperatorsResource\Pages;
 
+use App\Exports\OperatorsExport;
 use App\Filament\Resources\OperatorsResource;
+use Filament\Forms\Components\Actions\Modal\Actions\Action;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ListOperators extends ListRecords
 {
@@ -14,6 +17,12 @@ class ListOperators extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            Actions\Action::make('export')
+                ->label('Export Excel')
+                ->action(function () {
+                    return Excel::download(new OperatorsExport, 'operators.xlsx');
+                }),
+                
         ];
     }
 }

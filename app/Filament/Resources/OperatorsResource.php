@@ -84,6 +84,9 @@ class OperatorsResource extends Resource
                         );
                     }
                 ),
+                TextColumn::make('nama_operator')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('nama_alat')
                     ->searchable()
                     ->sortable(),

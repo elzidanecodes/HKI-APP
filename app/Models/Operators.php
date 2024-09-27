@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Http\Request;
 
 class Operators extends Model implements HasMedia
 {
@@ -55,4 +56,6 @@ public function registerMediaCollections(): void
             ->addMediaCollection('silo') // Media collection untuk foto_silo
             ->singleFile();
     }
+
+
 }
