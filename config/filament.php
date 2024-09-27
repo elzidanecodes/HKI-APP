@@ -141,11 +141,6 @@ return [
         'path' => app_path('Filament/Widgets'),
         'register' => [
             Widgets\AccountWidget::class,
-            Widgets\AnnouncementsWidget::class,
-<<<<<<< HEAD
-=======
-            StatsOverviewWidget::class
->>>>>>> dashboard
         ],
     ],
 
