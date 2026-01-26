@@ -3,23 +3,23 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\LogistiksResource\Pages;
-use App\Filament\Resources\LogistiksResource\RelationManagers;
 use App\Models\Logistiks;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Columns\BadgeColumn;
 
 class LogistiksResource extends Resource
 {
     protected static ?string $model = Logistiks::class;
+    protected static ?string $navigationLabel = 'Logistik';
+    protected static ?string $pluralModelLabel = 'Logistik';
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
@@ -27,28 +27,47 @@ class LogistiksResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('nama_barang')
-                    ->label('Nama Barang')
-                    ->placeholder('Nama Barang')
-                    ->required(),
-                TextInput::make('kategori_barang')
-                    ->label('Kategori Barang')
-                    ->placeholder('Kategori Barang')
-                    ->required(),
-                TextInput::make('deskripsi_barang')
-                    ->label('Deskripsi Barang')
-                    ->placeholder('Deskripsi Barang')
-                    ->required(),
-                TextInput::make('jumlah_barang')
-                    ->label('Jumlah Barang')
-                    ->placeholder('Jumlah Barang')
-                    ->numeric() // Menandakan bahwa ini input angka
-                    ->minValue(0) // Batas minimal
-                    ->required(),
-                TextInput::make('nama_vendor')
-                    ->label('Nama Vendor')
-                    ->placeholder('Nama Vendor')
-                    ->required(),
+                Section::make('Data Material')
+                    ->schema([
+                        TextInput::make('nama_barang')
+                            ->label('Nama Material')
+                            ->required()
+                            ->maxLength(100),
+
+                        TextInput::make('kategori_barang')
+                            ->label('Kategori')
+                            ->required()
+                            ->maxLength(50),
+
+                        Forms\Components\Textarea::make('deskripsi_barang')
+                            ->label('Deskripsi')
+                            ->rows(3)
+                            ->columnSpanFull(),
+
+                        TextInput::make('jumlah_barang')
+                            ->label('Jumlah')
+                            ->numeric()
+                            ->required(),
+
+                        Select::make('satuan')
+                            ->label('Satuan')
+                            ->options([
+                                'zak' => 'Zak',
+                                'batang' => 'Batang',
+                                'meter' => 'Meter',
+                                'unit' => 'Unit',
+                            ])
+                            ->required(),
+
+                        TextInput::make('lokasi')
+                            ->label('Lokasi')
+                            ->placeholder('Gudang / Site'),
+
+                        TextInput::make('nama_vendor')
+                            ->label('Vendor')
+                            ->maxLength(100),
+                    ])
+                    ->columns(2),
             ]);
     }
 
@@ -56,59 +75,46 @@ class LogistiksResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('No')->getStateUsing(
-                    static function ( $rowLoop, HasTable $livewire): string {
-                        return (string) (
-                            $rowLoop->iteration +
-                            ($livewire->tableRecordsPerPage * (
-                                $livewire->page - 1
-                            ))
-                        );
-                    }
-                ),
                 TextColumn::make('nama_barang')
+                    ->label('Material')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('kategori_barang')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('deskripsi_barang') 
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('jumlah_barang') 
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('nama_vendor') 
-                    ->searchable()
-                    ->sortable(),
-            ])
-            ->filters([
-                //
+
+                BadgeColumn::make('kategori_barang')
+                    ->label('Kategori')
+                    ->colors([
+                        'primary',
+                    ]),
+
+                BadgeColumn::make('jumlah_barang')
+                    ->label('Stok')
+                    ->formatStateUsing(fn ($record) =>
+                        $record->jumlah_barang . ' ' . $record->satuan
+                    )
+                    ->colors([
+                        'success',
+                    ]),
+
+                TextColumn::make('lokasi')
+                    ->label('Lokasi')
+                    ->toggleable()
+                    ->placeholder('-'),
+
+                TextColumn::make('nama_vendor')
+                    ->label('Vendor')
+                    ->toggleable()
+                    ->placeholder('-'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->label('') // Label tombol
-                    ->icon('heroicon-o-eye') // Ikon tombol,
-                    ->color('info'),
                 Tables\Actions\EditAction::make()
-                    ->label('')
-                    ->icon('heroicon-o-pencil')
-                    ->color('primary'),
-                Tables\Actions\DeleteAction::make()
-                    ->label('')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->successNotification(
-                        Notification::make()
-                        ->title('Data Logistik Dihapus')
-                        ->body('Data logistik telah berhasil dihapus.')
-                        ->success()   
-                    ),
+                    ->modalHeading('Edit Data Logistik')
+                    ->modalWidth('lg'),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
+
     
     public static function getRelations(): array
     {

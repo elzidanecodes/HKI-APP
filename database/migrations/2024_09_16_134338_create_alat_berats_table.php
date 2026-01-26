@@ -14,12 +14,23 @@ return new class extends Migration
     public function up()
     {
         Schema::create('alat_berats', function (Blueprint $table) {
-            $table->id('id_alat');
-            $table->unsignedBigInteger('nomor_silo')->unique();
-            $table->string('nama_alat', 35);
-            $table->string('merk_alat', 35);
-            $table->string('tipe_alat', 20);
-            $table->year('tahun_produksi');
+            $table->id();
+
+            // Identitas alat
+            $table->string('kode_alat')->unique(); 
+            // contoh: EXC-001, CRN-002 dll.
+
+            $table->string('nama_alat', 100);
+            $table->string('merk_alat', 50);
+            $table->string('tipe_alat', 50);
+
+            // Tahun produksi (bukan tanggal)
+            $table->year('tahun_produksi')->nullable();
+
+            // Lokasi / STA proyek
+            $table->string('sta_lokasi', 50)->nullable();
+            // contoh: STA 12+500, Gudang A, Workshop
+
             $table->timestamps();
         });
     }

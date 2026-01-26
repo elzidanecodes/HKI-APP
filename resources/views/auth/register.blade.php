@@ -43,7 +43,7 @@
                             <option value="" selected disabled>Pilih Departemen</option>
                             <option value='HSSE'>HSSE</option>
                             <option value='LOGISTIK'>LOGISTIK</option>
-                            <option value='DOKON'>DOKUMEN CONTROL</option>
+                            {{-- <option value='DOKON'>DOKUMEN CONTROL</option> --}}
                         </select>
                     </div>
         

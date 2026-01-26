@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -45,10 +46,14 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         // MENDAFTARKAN AGAR REDIRECT KE HALAMAN ADMIN SETELAH LOGIN
-        $this->app->singleton(
-            \Laravel\Fortify\Contracts\LoginResponse::class,
-            \App\Actions\Fortify\LoginResponse::class
-        );
+        $this->app->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    return redirect('/admin');
+                }
+            };
+        });
 
         // Register kustom RegisterResponse
         $this->app->singleton(
