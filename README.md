@@ -79,7 +79,7 @@ Widget dirancang untuk **quick awareness** dan **pengambilan keputusan cepat**.
 
 ```bash
 git clone https://github.com/elzidanecodes/HKI-APP.git
-cd REPO_NAME
+cd HKI-APP
 
 composer install
 npm install
