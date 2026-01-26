@@ -1,34 +1,35 @@
 <?php
+
 namespace App\Providers;
 
 use Filament\Facades\Filament;
+use Filament\Navigation\UserMenuItem;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Route;
+
 
 class FilamentServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        Filament::registerRenderHook('head.end', function () {
-            return <<<'HTML'
-                <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        document.querySelectorAll('[wire\\:click="logout"]').forEach(function (logoutButton) {
-                            logoutButton.addEventListener('click', function (event) {
-                                event.preventDefault();
-                                fetch('/logout', {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                    },
-                                }).then(() => {
-                                    window.location.href = '/';
-                                });
-                            });
-                        });
-                    });
-                </script>
-            HTML;
+        // Paksa auth via Jetstream
+        Filament::serving(function () {
+            if (! auth()->check()) {
+                redirect()->route('login')->send();
+            }
         });
+
+
+        // Logout Filament → endpoint logout Jetstream
+        Filament::registerUserMenuItems([
+            'logout' => UserMenuItem::make()
+                ->label('Logout')
+                ->url(url('/logout')),
+        ]);
+        
+        Filament::registerWidgets([
+            \App\Filament\Widgets\HseStats::class,
+            \App\Filament\Widgets\ActiveAssignmentsBySta::class,
+            \App\Filament\Widgets\ExpiredDocuments::class,
+        ]);
     }
 }

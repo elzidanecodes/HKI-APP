@@ -14,12 +14,20 @@ return new class extends Migration
     public function up()
     {
         Schema::create('logistiks', function (Blueprint $table) {
-            $table->id('id_logistik'); //id() menghasilkan tipe data big int unsigned
-            $table->string('nama_barang', 50);
-            $table->string('kategori_barang', 35);
-            $table->string('deskripsi_barang', 35);
-            $table->integer('jumlah_barang');
-            $table->string('nama_vendor', 50);
+            $table->id('id_logistik');
+
+            $table->string('nama_barang', 100);
+            $table->string('kategori_barang', 50);
+
+            $table->text('deskripsi_barang')->nullable();
+
+            $table->integer('jumlah_barang')->default(0);
+            $table->string('satuan', 20);
+
+            $table->string('lokasi')->nullable();
+
+            $table->string('nama_vendor', 100)->nullable();
+
             $table->timestamps();
         });
     }

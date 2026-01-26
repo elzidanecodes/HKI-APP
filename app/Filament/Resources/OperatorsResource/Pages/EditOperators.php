@@ -40,15 +40,15 @@ class EditOperators extends EditRecord
     {
         return [
             ButtonAction::make('submit')
-                ->label('Perbarui Data') // Ubah label tombol Save
-                ->action('save') // Tindakan save tetap dijalankan
-                ->color('primary') // Warna tombol tetap sama
-                ->submit('update'),  // Action tetap dikaitkan dengan update
+                ->label('Perbarui Data')
+                ->action('save') 
+                ->color('primary')
+                ->submit('update'),  
 
                 ButtonAction::make('cancel')
-                ->label('Batal') // Label untuk tombol Cancel
-                ->url($this->getResource()::getUrl('index')) // Arahkan ke halaman index
-                ->color('secondary'), // Warna tombol, bisa disesuaikan
+                ->label('Batal') 
+                ->url($this->getResource()::getUrl('index')) 
+                ->color('secondary'), 
 
                 // DeleteAction::make()
                 // ->label('Hapus')

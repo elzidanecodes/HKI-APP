@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\AlatBeratsResource\Pages;
+namespace App\Filament\Resources\SilosResource\Pages;
 
-use App\Filament\Resources\AlatBeratsResource;
+use App\Filament\Resources\SilosResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
 use Filament\Pages\Actions\ButtonAction;
 
-class EditAlatBerats extends EditRecord
+class EditSilos extends EditRecord
 {
-    protected static string $resource = AlatBeratsResource::class;
+    protected static string $resource = SilosResource::class;
 
     protected function getActions(): array
     {
@@ -19,16 +19,17 @@ class EditAlatBerats extends EditRecord
         ];
     }
 
-     protected function getTitle(): string
+    protected function getTitle(): string
     {
-        return 'Ubah Data Alat Berat';
+        return 'Ubah Data SILO';
     }
+
 
     protected function getSavedNotification(): ?Notification
     {
         return Notification::make()
-            ->title('Data Alat Berat Diperbarui')
-            ->body('Data alat berat telah berhasil diperbarui.')
+            ->title('Data SILO Diperbarui')
+            ->body('Data SILO telah berhasil diperbarui.')
             ->success();
     }
 
@@ -44,8 +45,8 @@ class EditAlatBerats extends EditRecord
 
                 ButtonAction::make('cancel')
                 ->label('Batal') 
-                ->url($this->getResource()::getUrl('index'))
-                ->color('secondary'),
+                ->url($this->getResource()::getUrl('index')) 
+                ->color('secondary'), 
 
                 // DeleteAction::make()
                 // ->label('Hapus')

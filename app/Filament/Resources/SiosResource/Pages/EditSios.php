@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\AlatBeratsResource\Pages;
+namespace App\Filament\Resources\SiosResource\Pages;
 
-use App\Filament\Resources\AlatBeratsResource;
+use App\Filament\Resources\SiosResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
 use Filament\Pages\Actions\ButtonAction;
 
-class EditAlatBerats extends EditRecord
+class EditSios extends EditRecord
 {
-    protected static string $resource = AlatBeratsResource::class;
+    protected static string $resource = SiosResource::class;
 
     protected function getActions(): array
     {
@@ -19,16 +19,16 @@ class EditAlatBerats extends EditRecord
         ];
     }
 
-     protected function getTitle(): string
+    protected function getTitle(): string
     {
-        return 'Ubah Data Alat Berat';
+        return 'Ubah Data SIO';
     }
 
     protected function getSavedNotification(): ?Notification
     {
         return Notification::make()
-            ->title('Data Alat Berat Diperbarui')
-            ->body('Data alat berat telah berhasil diperbarui.')
+            ->title('Data SIO Diperbarui')
+            ->body('Data SIO telah berhasil diperbarui.')
             ->success();
     }
 
