@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class OperatorAlatAssignment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'operator_id',
         'alat_berat_id',
