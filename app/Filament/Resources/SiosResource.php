@@ -51,9 +51,15 @@ class SiosResource extends Resource
 
                     FileUpload::make('file_sio')
                         ->label('File SIO')
-                        ->disk('public')
+                        ->disk('local')
                         ->directory('sio')
-                        ->visibility('public')
+                        ->visibility('private')
+                        // 'local' disk has no public URL; resolve the existing
+                        // file's preview through the authenticated document
+                        // route instead (Phase 0 / Milestone M0.3).
+                        ->getUploadedFileUrlUsing(fn (?string $file, $record): ?string => ($file && $record)
+                            ? route('documents.sio.show', $record)
+                            : null)
                         ->acceptedFileTypes(['application/pdf', 'image/*'])
                         ->maxSize(2048)
                         ->imagePreviewHeight('300')
@@ -111,13 +117,18 @@ class SiosResource extends Resource
 
                 ImageColumn::make('file_sio')
                     ->label('File')
-                    ->disk('public')
+                    // 'local' disk has no public URL; render the thumbnail
+                    // through the authenticated document route instead
+                    // (Phase 0 / Milestone M0.3).
+                    ->getStateUsing(fn ($record): ?string => $record->file_sio
+                        ? route('documents.sio.show', $record)
+                        : null)
                     ->height(50),
 
                 TextColumn::make('file_link')
                     ->label('Lihat File')
                     ->getStateUsing(fn ($record) => 'Buka')
-                    ->url(fn ($record) => asset('storage/' . $record->file_sio))
+                    ->url(fn ($record) => $record->file_sio ? route('documents.sio.show', $record) : null)
                     ->openUrlInNewTab()
                     ->icon('heroicon-o-eye'),
             ])

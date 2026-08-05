@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\DocumentController;
 
 
 /*
@@ -23,6 +24,13 @@ Route::get('/', function () {
 
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+// Interim access control for legal documents (Phase 0 / Milestone M0.3):
+// authentication only. Policy-scoped authorization lands in Phase 3.
+Route::middleware('auth')->group(function () {
+    Route::get('/documents/sio/{sios}', [DocumentController::class, 'sio'])->name('documents.sio.show');
+    Route::get('/documents/silo/{silos}', [DocumentController::class, 'silo'])->name('documents.silo.show');
+});
 
 Route::get('/', function () {
     return redirect('/admin');
