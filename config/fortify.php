@@ -145,7 +145,12 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Public self-registration disabled (Phase 0 / Milestone M0.2): combined
+        // with the current lack of role-based authorization, any self-registered
+        // account receives full administrative access to safety-compliance data.
+        // Re-enable only once role enforcement ships (Phase 3), or replace with a
+        // controlled invite/approval flow.
+        // Features::registration(),
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::updateProfileInformation(),
