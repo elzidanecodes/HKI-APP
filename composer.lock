@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eef87cde0d13982a972ea89f4a254775",
+    "content-hash": "350a6d71b957173fe30f35ae5c2ec283",
     "packages": [
         {
             "name": "akaunting/laravel-money",
@@ -134,12 +134,12 @@
             "version": "1.5.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/blade-ui-kit/blade-heroicons.git",
+                "url": "https://github.com/driesvints/blade-heroicons.git",
                 "reference": "53d149fb163b4df4829ce2c89442cf2424704c25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blade-ui-kit/blade-heroicons/zipball/53d149fb163b4df4829ce2c89442cf2424704c25",
+                "url": "https://api.github.com/repos/driesvints/blade-heroicons/zipball/53d149fb163b4df4829ce2c89442cf2424704c25",
                 "reference": "53d149fb163b4df4829ce2c89442cf2424704c25",
                 "shasum": ""
             },
@@ -207,12 +207,12 @@
             "version": "1.7.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/blade-ui-kit/blade-icons.git",
+                "url": "https://github.com/driesvints/blade-icons.git",
                 "reference": "8f787baf09d88cdfd6ec4dbaba11ebfa885f0595"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blade-ui-kit/blade-icons/zipball/8f787baf09d88cdfd6ec4dbaba11ebfa885f0595",
+                "url": "https://api.github.com/repos/driesvints/blade-icons/zipball/8f787baf09d88cdfd6ec4dbaba11ebfa885f0595",
                 "reference": "8f787baf09d88cdfd6ec4dbaba11ebfa885f0595",
                 "shasum": ""
             },
@@ -3771,12 +3771,12 @@
             "version": "2.72.5",
             "source": {
                 "type": "git",
-                "url": "https://github.com/briannesbitt/Carbon.git",
+                "url": "https://github.com/CarbonPHP/carbon.git",
                 "reference": "afd46589c216118ecd48ff2b95d77596af1e57ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/afd46589c216118ecd48ff2b95d77596af1e57ed",
+                "url": "https://api.github.com/repos/CarbonPHP/carbon/zipball/afd46589c216118ecd48ff2b95d77596af1e57ed",
                 "reference": "afd46589c216118ecd48ff2b95d77596af1e57ed",
                 "shasum": ""
             },
@@ -10942,7 +10942,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.0.2"
+        "php": "^8.1"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"
