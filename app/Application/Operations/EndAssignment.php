@@ -19,6 +19,14 @@ use Illuminate\Support\Facades\DB;
  * AssignOperator: ending an assignment touches both the equipment and
  * the operator, so LOGISTIK's "no access to Operators" exclusion must
  * hold here too.
+ *
+ * Milestone M4.2: unlike AssignOperator, there's no separate
+ * eligibility check here to lock — handle() ends the one specific
+ * $assignment it's given, unconditionally. The row itself is
+ * re-fetched with lockForUpdate() inside the transaction before being
+ * updated, so a concurrent AssignOperator request checking this same
+ * equipment/operator's active-assignment state (also lockForUpdate(),
+ * same milestone) serializes against it rather than racing.
  */
 final class EndAssignment
 {
@@ -30,12 +38,14 @@ final class EndAssignment
         $this->authorize('update', $assignment->operator()->firstOrFail());
 
         return DB::transaction(function () use ($assignment, $tanggalSelesai) {
-            $assignment->update([
+            $locked = OperatorAlatAssignment::whereKey($assignment->getKey())->lockForUpdate()->firstOrFail();
+
+            $locked->update([
                 'tanggal_selesai' => $tanggalSelesai,
                 'is_active' => false,
             ]);
 
-            return $assignment;
+            return $locked;
         });
     }
 }

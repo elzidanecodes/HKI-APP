@@ -26,10 +26,22 @@ use Illuminate\Support\Facades\DB;
  * equipment touches both, so the approved authorization matrix's
  * "LOGISTIK: no access to Operators" must hold here even though LOGISTIK
  * has full CRUD on Alat Berat — checking Alat Berat alone would let
- * LOGISTIK assign operators despite that exclusion. No row locking yet
- * (Phase 4 / M4.2) — the transaction here only gives atomicity for this
- * single write, not protection against a concurrent request passing the
- * same eligibility check first.
+ * LOGISTIK assign operators despite that exclusion.
+ *
+ * checkEligibility()'s two assignment-existence checks are row-locked
+ * inside handle()'s transaction (Milestone M4.2, closing TECHNICAL_AUDIT.md
+ * H1): two near-simultaneous requests for the same operator or equipment
+ * now serialize on those rows instead of racing to both pass the same
+ * check before either write lands. The database's own unique constraint
+ * (same milestone) is the actual last line of defense — the lock exists
+ * to fail cleanly with AssignmentIneligible instead of an ugly
+ * QueryException from the constraint. Document-validity checks
+ * (SIO/SILO) are deliberately not locked: they're not the invariant this
+ * migration protects, and locking unrelated tables would just add
+ * contention. lockForUpdate() defaults to off so the UI guard
+ * (OperatorAssignmentsRelationManager's before() closure, Milestone
+ * M2.5) can keep calling checkEligibility() read-only, outside any
+ * transaction.
  *
  * Deliberately queries OperatorAlatAssignment directly for the operator's
  * busy-elsewhere check rather than calling Operators::activeAssignment():
@@ -57,15 +69,22 @@ final class AssignOperator
     /**
      * @return string[]
      */
-    public function checkEligibility(AlatBerats $alatBerat, Operators $operator, CarbonInterface $today): array
+    public function checkEligibility(AlatBerats $alatBerat, Operators $operator, CarbonInterface $today, bool $lockForUpdate = false): array
     {
+        $equipmentAssignment = $alatBerat->activeAssignment();
+        $operatorAssignmentElsewhere = OperatorAlatAssignment::where('operator_id', $operator->id)
+            ->where('is_active', true);
+
+        if ($lockForUpdate) {
+            $equipmentAssignment->lockForUpdate();
+            $operatorAssignmentElsewhere->lockForUpdate();
+        }
+
         return $this->eligibility->ineligibilityReasons(
             operatorSioValidities: $this->validities->forOperatorSios($operator),
             equipmentSiloValidities: $this->validities->forEquipmentSilos($alatBerat),
-            equipmentHasActiveAssignment: $alatBerat->activeAssignment()->exists(),
-            operatorHasActiveAssignmentElsewhere: OperatorAlatAssignment::where('operator_id', $operator->id)
-                ->where('is_active', true)
-                ->exists(),
+            equipmentHasActiveAssignment: $equipmentAssignment->exists(),
+            operatorHasActiveAssignmentElsewhere: $operatorAssignmentElsewhere->exists(),
             today: $today,
         );
     }
@@ -79,7 +98,7 @@ final class AssignOperator
         $this->authorize('update', $operator);
 
         return DB::transaction(function () use ($alatBerat, $operator, $tanggalMulai) {
-            $reasons = $this->checkEligibility($alatBerat, $operator, CarbonImmutable::now());
+            $reasons = $this->checkEligibility($alatBerat, $operator, CarbonImmutable::now(), lockForUpdate: true);
 
             if ($reasons !== []) {
                 throw new AssignmentIneligible($reasons);
