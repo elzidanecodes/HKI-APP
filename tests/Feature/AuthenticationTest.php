@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -27,8 +26,12 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
+        // This application redirects every authenticated user straight to
+        // the Filament admin panel (App\Providers\FortifyServiceProvider's
+        // custom LoginResponse binding), not RouteServiceProvider::HOME
+        // ('/dashboard'), which is unused Jetstream-scaffold leftover.
         $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        $response->assertRedirect('/admin');
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
