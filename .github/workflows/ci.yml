@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    name: Pint & PHPUnit
+    name: Pint, PHPStan & PHPUnit
     runs-on: ubuntu-latest
 
     steps:
@@ -57,6 +57,11 @@ jobs:
         # reported on every run; they just don't fail the build yet.
         run: vendor/bin/pint --test
         continue-on-error: true
+
+      - name: Static analysis (Larastan)
+        # Blocking: phpstan-baseline.neon freezes every pre-existing error,
+        # so this only fails on issues introduced from this point forward.
+        run: vendor/bin/phpstan analyse --memory-limit=512M
 
       - name: Run test suite
         run: php artisan test

@@ -1,0 +1,41 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Parameter \\#1 \\$photo of method App\\\\Models\\\\User\\:\\:updateProfilePhoto\\(\\) expects Illuminate\\\\Http\\\\UploadedFile, string given\\.$#"
+			count: 1
+			path: app/Actions/Fortify/UpdateUserProfileInformation.php
+
+		-
+			message: "#^Relation 'media' is not found in App\\\\Models\\\\Operators model\\.$#"
+			count: 1
+			path: app/Exports/OperatorsExport.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Filament/Resources/AlatBeratsResource/RelationManagers/OperatorAssignmentsRelationManager.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:activeAssignment\\(\\)\\.$#"
+			count: 2
+			path: app/Filament/Resources/AlatBeratsResource/RelationManagers/OperatorAssignmentsRelationManager.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:hasActiveSilo\\(\\)\\.$#"
+			count: 2
+			path: app/Filament/Resources/AlatBeratsResource/RelationManagers/OperatorAssignmentsRelationManager.php
+
+		-
+			message: "#^Call to an undefined static method Filament\\\\Resources\\\\Resource\\:\\:getTableQuery\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Resources/SilosResource.php
+
+		-
+			message: "#^Relation 'alatBerat' is not found in App\\\\Models\\\\OperatorAlatAssignment model\\.$#"
+			count: 1
+			path: app/Filament/Widgets/ActiveAssignmentsBySta.php
+
+		-
+			message: "#^Relation 'operator' is not found in App\\\\Models\\\\OperatorAlatAssignment model\\.$#"
+			count: 1
+			path: app/Filament/Widgets/ActiveAssignmentsBySta.php
