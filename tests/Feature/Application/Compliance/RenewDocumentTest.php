@@ -7,12 +7,23 @@ use App\Models\AlatBerats;
 use App\Models\Operators;
 use App\Models\Silos;
 use App\Models\Sios;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class RenewDocumentTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // HSSE has full CRUD on SIO/SILO (IMPLEMENTATION_PLAN.md
+        // Milestone M3.3's approved authorization matrix).
+        $this->actingAs(User::factory()->create(['job_title' => 'HSSE']));
+    }
 
     public function test_renews_a_sio_after_the_previous_one_expired(): void
     {
@@ -102,5 +113,29 @@ class RenewDocumentTest extends TestCase
 
         $this->assertTrue($renewed->exists);
         $this->assertDatabaseHas('silos', ['nomor_silo' => 'SILO-EARLY-RENEWAL']);
+    }
+
+    // IMPLEMENTATION_PLAN.md Milestone M3.3's own testing requirement:
+    // the Action-level check must fire even if a hypothetical caller
+    // bypasses the UI entirely. LOGISTIK has no access to SIO/SILO per
+    // the approved authorization matrix.
+    public function test_logistik_cannot_renew_a_sio_even_calling_the_action_directly(): void
+    {
+        $this->actingAs(User::factory()->create(['job_title' => 'LOGISTIK']));
+
+        $operator = Operators::factory()->create();
+        Sios::factory()->for($operator, 'operator')->create([
+            'tanggal_expired' => now()->subDay()->toDateString(),
+        ]);
+
+        $renewal = new Sios([
+            'operator_id' => $operator->id,
+            'nomor_sio' => 'SIO-RENEWED-0002',
+            'tanggal_expired' => now()->addYear()->toDateString(),
+        ]);
+
+        $this->expectException(AuthorizationException::class);
+
+        (new RenewDocument)->handle($renewal);
     }
 }

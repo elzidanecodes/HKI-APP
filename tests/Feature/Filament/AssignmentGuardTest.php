@@ -30,7 +30,11 @@ class AssignmentGuardTest extends TestCase
     {
         parent::setUp();
 
-        $this->actingAs(User::factory()->create());
+        // HSSE has full CRUD on every entity this test touches
+        // (IMPLEMENTATION_PLAN.md Milestone M3.3's approved authorization
+        // matrix) — a random job_title would make this test flaky now
+        // that Policies are enforced, not just logged.
+        $this->actingAs(User::factory()->create(['job_title' => 'HSSE']));
     }
 
     private function relationManager(AlatBerats $alatBerat): TestableLivewire

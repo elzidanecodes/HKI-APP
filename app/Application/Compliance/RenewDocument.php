@@ -4,6 +4,7 @@ namespace App\Application\Compliance;
 
 use App\Models\Silos;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -20,14 +21,18 @@ use Illuminate\Support\Facades\DB;
  * results in two overlapping valid SILO periods for the same equipment,
  * matching ARCHITECTURE_BLUEPRINT.md §4 Diagram 3's state machine.
  *
- * Authorization is stubbed as always-allow: Identity/Policies don't exist
- * until Phase 3 (Milestone M3.3 replaces this with a real check).
+ * Authorization is enforced via the registered SiloPolicy/SioPolicy
+ * (IMPLEMENTATION_PLAN.md Milestone M3.3), authorized as 'create' since
+ * renewal mechanically creates a new document row (see class comment
+ * above) — there is no distinct 'renew' Policy method.
  */
 final class RenewDocument
 {
+    use AuthorizesRequests;
+
     public function handle(Model $document): Model
     {
-        $this->authorize();
+        $this->authorize('create', get_class($document));
 
         return DB::transaction(function () use ($document) {
             $this->applyDefaultExpiry($document);
@@ -49,10 +54,5 @@ final class RenewDocument
         if ($document instanceof Silos && $document->getAttribute('tanggal_terbit') !== null) {
             $document->tanggal_expired = SiloExpiryCalculator::expiresAt($document->tanggal_terbit);
         }
-    }
-
-    private function authorize(): void
-    {
-        // Stubbed: always allowed until Phase 3 (Identity/Policies) exists.
     }
 }

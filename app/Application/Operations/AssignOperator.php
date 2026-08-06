@@ -10,6 +10,7 @@ use App\Models\OperatorAlatAssignment;
 use App\Models\Operators;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -20,11 +21,15 @@ use Illuminate\Support\Facades\DB;
  * (Milestone M2.3). Not yet wired into that RelationManager — the
  * strangler cutover happens in Milestone M2.5.
  *
- * Authorization is stubbed as always-allow: Identity/Policies don't exist
- * until Phase 3 (Milestone M3.3 replaces this with a real check). No row
- * locking yet (Phase 4 / M4.2) — the transaction here only gives
- * atomicity for this single write, not protection against a concurrent
- * request passing the same eligibility check first.
+ * Authorization is enforced against both entities involved
+ * (IMPLEMENTATION_PLAN.md Milestone M3.3): assigning an operator to
+ * equipment touches both, so the approved authorization matrix's
+ * "LOGISTIK: no access to Operators" must hold here even though LOGISTIK
+ * has full CRUD on Alat Berat — checking Alat Berat alone would let
+ * LOGISTIK assign operators despite that exclusion. No row locking yet
+ * (Phase 4 / M4.2) — the transaction here only gives atomicity for this
+ * single write, not protection against a concurrent request passing the
+ * same eligibility check first.
  *
  * Deliberately queries OperatorAlatAssignment directly for the operator's
  * busy-elsewhere check rather than calling Operators::activeAssignment():
@@ -42,6 +47,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class AssignOperator
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly AssignmentEligibility $eligibility,
         private readonly DocumentValidityMapper $validities,
@@ -68,7 +75,8 @@ final class AssignOperator
      */
     public function handle(AlatBerats $alatBerat, Operators $operator, CarbonInterface $tanggalMulai): OperatorAlatAssignment
     {
-        $this->authorize();
+        $this->authorize('update', $alatBerat);
+        $this->authorize('update', $operator);
 
         return DB::transaction(function () use ($alatBerat, $operator, $tanggalMulai) {
             $reasons = $this->checkEligibility($alatBerat, $operator, CarbonImmutable::now());
@@ -84,10 +92,5 @@ final class AssignOperator
                 'is_active' => true,
             ]);
         });
-    }
-
-    private function authorize(): void
-    {
-        // Stubbed: always allowed until Phase 3 (Identity/Policies) exists.
     }
 }

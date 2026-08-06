@@ -11,12 +11,24 @@ use App\Models\OperatorAlatAssignment;
 use App\Models\Operators;
 use App\Models\Silos;
 use App\Models\Sios;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class AssignOperatorTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // HSSE has full CRUD on Operators and Alat Berat
+        // (IMPLEMENTATION_PLAN.md Milestone M3.3's approved authorization
+        // matrix).
+        $this->actingAs(User::factory()->create(['job_title' => 'HSSE']));
+    }
 
     private function action(): AssignOperator
     {
@@ -98,5 +110,26 @@ class AssignOperatorTest extends TestCase
         $assignment = $this->action()->handle($alatBerat, $operator, now());
 
         $this->assertTrue($assignment->exists);
+    }
+
+    // IMPLEMENTATION_PLAN.md Milestone M3.3's own testing requirement:
+    // the Action-level check must fire even if a hypothetical caller
+    // bypasses the UI entirely. LOGISTIK has full CRUD on Alat Berat but
+    // no access to Operators per the approved authorization matrix —
+    // assigning an operator touches both, so this must still be denied,
+    // not just checked against Alat Berat alone.
+    public function test_logistik_cannot_assign_an_operator_even_calling_the_action_directly(): void
+    {
+        $this->actingAs(User::factory()->create(['job_title' => 'LOGISTIK']));
+
+        $alatBerat = AlatBerats::factory()->create();
+        Silos::factory()->for($alatBerat, 'alatBerat')->create();
+
+        $operator = Operators::factory()->create();
+        Sios::factory()->for($operator, 'operator')->create();
+
+        $this->expectException(AuthorizationException::class);
+
+        $this->action()->handle($alatBerat, $operator, now());
     }
 }

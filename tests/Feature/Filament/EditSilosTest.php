@@ -27,7 +27,11 @@ class EditSilosTest extends TestCase
     {
         parent::setUp();
 
-        $this->actingAs(User::factory()->create());
+        // HSSE has full CRUD on Silos (IMPLEMENTATION_PLAN.md Milestone
+        // M3.3's approved authorization matrix) — a random job_title
+        // would make this test flaky now that Policies are enforced, not
+        // just logged.
+        $this->actingAs(User::factory()->create(['job_title' => 'HSSE']));
     }
 
     public function test_editing_tanggal_terbit_recomputes_tanggal_expired(): void

@@ -27,9 +27,15 @@ use Illuminate\Support\Facades\DB;
  * *continue* is a different question from whether a *new* one may be
  * *created*, even though both share the same document-validity check.
  *
- * Not yet wired into the `assignment:auto-end-expired` console command —
- * that cutover happens in Milestone M2.5, once this has its own test
- * coverage proving it resolves the C1 scenario correctly.
+ * Wired into the `assignment:auto-end-expired` console command
+ * (Milestone M2.5), which the scheduler runs unattended with no
+ * authenticated user. Deliberately has no $this->authorize() call
+ * (IMPLEMENTATION_PLAN.md Milestone M3.3): Policies answer "can this
+ * USER do X," which has no meaning for a cron-triggered system process —
+ * adding one would make the nightly run fail with no user to check
+ * against, silently reintroducing the C1-class outage this Action exists
+ * to prevent. AssignOperator and EndAssignment, by contrast, always run
+ * inside an authenticated Filament session, so they do authorize.
  *
  * One Action = one transaction (Blueprint §8.4): the whole batch runs in
  * a single transaction, matching the current command's implicit
