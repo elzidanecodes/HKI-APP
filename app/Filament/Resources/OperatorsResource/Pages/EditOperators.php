@@ -6,9 +6,7 @@ use App\Filament\Resources\OperatorsResource;
 use Filament\Notifications\Notification;
 use Filament\Pages\Actions;
 use Filament\Pages\Actions\ButtonAction;
-use Filament\Pages\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Tables\Actions\DeleteAction as ActionsDeleteAction;
 
 class EditOperators extends EditRecord
 {
@@ -17,7 +15,8 @@ class EditOperators extends EditRecord
     protected function getActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->authorize('delete', $this->getRecord()),
         ];
     }
 
@@ -46,15 +45,9 @@ class EditOperators extends EditRecord
                 ->submit('update'),  
 
                 ButtonAction::make('cancel')
-                ->label('Batal') 
-                ->url($this->getResource()::getUrl('index')) 
-                ->color('secondary'), 
-
-                // DeleteAction::make()
-                // ->label('Hapus')
-                // ->requiresConfirmation()
-                // ->redirect($this->getResource()::getUrl('index'))
-                
+                ->label('Batal')
+                ->url($this->getResource()::getUrl('index'))
+                ->color('secondary'),
         ];
     }
 }

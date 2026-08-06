@@ -10,10 +10,12 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Silos extends Model implements LegalDocument
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'silos';
 

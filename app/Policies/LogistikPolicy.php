@@ -13,6 +13,10 @@ use App\Policies\Concerns\LogsPolicyDecisions;
  * (Role::DOKON) gets read only. Content unchanged from this Policy's
  * original M3.2 draft — only enforcement changed, per
  * IMPLEMENTATION_PLAN.md Milestone M3.3 — see LogsPolicyDecisions.
+ *
+ * deleteAny() added in Milestone M3.5 to gate LogistiksResource's
+ * DeleteBulkAction — the same CRUD grant as delete() above, not a new
+ * one; bulk delete is just a UI convenience for the same permission.
  */
 class LogistikPolicy
 {
@@ -45,5 +49,10 @@ class LogistikPolicy
     public function delete(User $user, Logistiks $logistik): bool
     {
         return $this->logDecision('delete', $user, $this->hasAnyRole($user, self::MANAGE_ROLES));
+    }
+
+    public function deleteAny(User $user): bool
+    {
+        return $this->logDecision('deleteAny', $user, $this->hasAnyRole($user, self::MANAGE_ROLES));
     }
 }

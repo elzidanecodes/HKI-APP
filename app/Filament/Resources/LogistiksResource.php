@@ -111,7 +111,8 @@ class LogistiksResource extends Resource
                     ->modalWidth('lg'),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->authorize('deleteAny'),
             ]);
     }
 
