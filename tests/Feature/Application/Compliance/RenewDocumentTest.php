@@ -34,9 +34,20 @@ class RenewDocumentTest extends TestCase
         $this->assertDatabaseHas('sios', ['nomor_sio' => 'SIO-RENEWED-0001']);
     }
 
-    // M9 asymmetry, illustrated directly: Sios has no guard equivalent to
-    // Silos::booted()'s "only one active per equipment", so renewing
-    // *before* the existing SIO expires already works today.
+    // M9 asymmetry, illustrated at the Application layer specifically:
+    // Sios::booted() has no guard equivalent to Silos::booted()'s "only
+    // one active per equipment", so RenewDocument itself places no
+    // restriction on early renewal.
+    //
+    // Correction discovered in Milestone M2.5: this does NOT mean early
+    // SIO renewal is unrestricted end-to-end today. A separate,
+    // page-level guard — SiosResource/Pages/CreateSios::beforeCreate() —
+    // blocks creating a second active SIO for the same operator, the same
+    // restriction H2 describes for SILO, just implemented at the Filament
+    // page level instead of the model level. That guard is untouched by
+    // this milestone (M2.5 only changes *how* it queries, not *whether*
+    // it blocks) and is a newly-identified target for Milestone M2.7,
+    // alongside Silos::booted().
     public function test_early_sio_renewal_already_works_today(): void
     {
         $operator = Operators::factory()->create();

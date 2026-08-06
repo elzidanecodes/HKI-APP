@@ -32,6 +32,13 @@ use Illuminate\Support\Facades\DB;
  * instead of the real "operator_id") — TECHNICAL_AUDIT.md finding M2,
  * fixed in Milestone M5.1, not here. The current RelationManager guard
  * already avoids it the same way; this Action does too.
+ *
+ * checkEligibility() is exposed separately from handle() so
+ * OperatorAssignmentsRelationManager (Milestone M2.5) can reuse the exact
+ * same check for its UI guard without writing — Filament may depend on
+ * this Application Action (ARCHITECTURE_BLUEPRINT.md §8.2), but may not
+ * import App\Domain\Operations\Services\AssignmentEligibility directly,
+ * which is not an enum or value object.
  */
 final class AssignOperator
 {
@@ -41,6 +48,22 @@ final class AssignOperator
     ) {}
 
     /**
+     * @return string[]
+     */
+    public function checkEligibility(AlatBerats $alatBerat, Operators $operator, CarbonInterface $today): array
+    {
+        return $this->eligibility->ineligibilityReasons(
+            operatorSioValidities: $this->validities->forOperatorSios($operator),
+            equipmentSiloValidities: $this->validities->forEquipmentSilos($alatBerat),
+            equipmentHasActiveAssignment: $alatBerat->activeAssignment()->exists(),
+            operatorHasActiveAssignmentElsewhere: OperatorAlatAssignment::where('operator_id', $operator->id)
+                ->where('is_active', true)
+                ->exists(),
+            today: $today,
+        );
+    }
+
+    /**
      * @throws AssignmentIneligible
      */
     public function handle(AlatBerats $alatBerat, Operators $operator, CarbonInterface $tanggalMulai): OperatorAlatAssignment
@@ -48,17 +71,7 @@ final class AssignOperator
         $this->authorize();
 
         return DB::transaction(function () use ($alatBerat, $operator, $tanggalMulai) {
-            $today = CarbonImmutable::now();
-
-            $reasons = $this->eligibility->ineligibilityReasons(
-                operatorSioValidities: $this->validities->forOperatorSios($operator),
-                equipmentSiloValidities: $this->validities->forEquipmentSilos($alatBerat),
-                equipmentHasActiveAssignment: $alatBerat->activeAssignment()->exists(),
-                operatorHasActiveAssignmentElsewhere: OperatorAlatAssignment::where('operator_id', $operator->id)
-                    ->where('is_active', true)
-                    ->exists(),
-                today: $today,
-            );
+            $reasons = $this->checkEligibility($alatBerat, $operator, CarbonImmutable::now());
 
             if ($reasons !== []) {
                 throw new AssignmentIneligible($reasons);

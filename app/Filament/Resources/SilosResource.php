@@ -4,31 +4,30 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SilosResource\Pages;
 use App\Models\Silos;
-
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
-
-use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\ImageColumn;
-use Carbon\Carbon;
+use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
 
 class SilosResource extends Resource
 {
     protected static ?string $model = Silos::class;
+
     protected static ?string $navigationLabel = 'SILO';
+
     protected static ?string $pluralModelLabel = 'SILO';
+
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
-   public static function form(Form $form): Form
+    public static function form(Form $form): Form
     {
         return $form->schema([
             Section::make('Dokumen SILO')
@@ -73,8 +72,6 @@ class SilosResource extends Resource
         ]);
     }
 
-
-
     public static function table(Table $table): Table
     {
         return $table
@@ -105,30 +102,9 @@ class SilosResource extends Resource
                 // STATUS DOKUMEN
                 BadgeColumn::make('status')
                     ->label('Status')
-                    ->getStateUsing(function ($record) {
-
-                        $today = Carbon::today();
-                        $expired = Carbon::parse($record->tanggal_expired)->startOfDay();
-
-                        // SUDAH EXPIRED
-                        if ($expired->lt($today)) {
-                            return 'Expired';
-                        }
-
-                        // AKAN EXPIRED (antara hari ini s/d 30 hari ke depan)
-                        if ($expired->between(
-                            $today,
-                            $today->copy()->addDays(30),
-                            true // inclusive
-                        )) {
-                            return 'Akan Expired';
-                        }
-
-                        // MASIH AKTIF
-                        return 'Aktif';
-                    })
+                    ->getStateUsing(fn ($record) => $record->statusLabel())
                     ->colors([
-                        'danger'  => 'Expired',
+                        'danger' => 'Expired',
                         'warning' => 'Akan Expired',
                         'success' => 'Aktif',
                     ]),
@@ -157,14 +133,14 @@ class SilosResource extends Resource
         return parent::getTableQuery()
             ->orderByDesc('tanggal_expired');
     }
-    
+
     public static function getRelations(): array
     {
         return [
             //
         ];
     }
-    
+
     public static function getPages(): array
     {
         return [
@@ -172,5 +148,5 @@ class SilosResource extends Resource
             'create' => Pages\CreateSilos::route('/create'),
             'edit' => Pages\EditSilos::route('/{record}/edit'),
         ];
-    }    
+    }
 }

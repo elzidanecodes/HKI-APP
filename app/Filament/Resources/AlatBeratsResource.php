@@ -8,18 +8,17 @@ use App\Models\AlatBerats;
 use Filament\Forms;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Resources\Table;
-use Filament\Tables\Columns\BadgeColumn;
-use Illuminate\Support\Facades\Storage;
+use Filament\Tables;
 
 class AlatBeratsResource extends Resource
 {
     protected static ?string $model = AlatBerats::class;
-    
+
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
     protected static ?string $navigationLabel = 'Alat Berat';
+
     protected static ?string $pluralModelLabel = 'Alat Berat';
 
     /* =========================
@@ -30,8 +29,7 @@ class AlatBeratsResource extends Resource
         return $form->schema([
 
             Forms\Components\View::make('filament.components.silo-info')
-            ->columnSpan('full'),
-
+                ->columnSpan('full'),
 
             // =========================
             // DATA ALAT BERAT (MASTER)
@@ -58,8 +56,8 @@ class AlatBeratsResource extends Resource
                         ->required()
                         ->maxLength(20),
 
-                    Forms\Components\DatePicker::make('tahun_produksi') 
-                        -> label('Tahun Produksi')
+                    Forms\Components\DatePicker::make('tahun_produksi')
+                        ->label('Tahun Produksi')
                         ->displayFormat('Y') // Menampilkan hanya tahun
                         ->format('Y')        // Menyimpan hanya tahun ke dalam database
                         ->placeholder('Pilih tahun')
@@ -67,7 +65,7 @@ class AlatBeratsResource extends Resource
                     Forms\Components\TextInput::make('sta_lokasi')
                         ->label('STA Lokasi')
                         ->required()
-                        ->maxLength(50),                       
+                        ->maxLength(50),
                 ])
                 ->columns(2),
 
@@ -98,7 +96,7 @@ class AlatBeratsResource extends Resource
 
                 Tables\Columns\TextColumn::make('tahun_produksi')
                     ->label('Tahun'),
-                
+
                 Tables\Columns\TextColumn::make('sta_lokasi')
                     ->label('STA Lokasi'),
 
@@ -115,29 +113,21 @@ class AlatBeratsResource extends Resource
                         'warning' => 'Sedang Digunakan',
                         'secondary' => 'Idle',
                     ]),
-                    
-                    Tables\Columns\BadgeColumn::make('silo_status')
-                        ->label('SILO')
-                        ->getStateUsing(function ($record) {
 
-                            $hasActiveSilo = \App\Models\Silos::where('alat_berat_id', $record->id)
-                                ->whereDate('tanggal_expired', '>=', now())
-                                ->exists();
+                Tables\Columns\BadgeColumn::make('silo_status')
+                    ->label('SILO')
+                    ->getStateUsing(fn ($record) => $record->siloStatus())
+                    ->colors([
+                        'success' => 'Aktif',
+                        'danger' => 'Expired',
+                    ]),
+            ])
 
-                            return $hasActiveSilo ? 'Aktif' : 'Expired';
-                        })
-                        ->colors([
-                            'success' => 'Aktif',
-                            'danger'  => 'Expired',
-                        ]),
-                ])
-            
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ]);
     }
-    
 
     public static function getRelations(): array
     {
@@ -152,9 +142,9 @@ class AlatBeratsResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListAlatBerats::route('/'),
+            'index' => Pages\ListAlatBerats::route('/'),
             'create' => Pages\CreateAlatBerats::route('/create'),
-            'edit'   => Pages\EditAlatBerats::route('/{record}/edit'),
+            'edit' => Pages\EditAlatBerats::route('/{record}/edit'),
         ];
     }
 }

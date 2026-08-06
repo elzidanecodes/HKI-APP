@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
+use App\Domain\Compliance\ValueObjects\DocumentValidity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Carbon;
 
 class AlatBerats extends Model
 {
@@ -20,7 +19,6 @@ class AlatBerats extends Model
         'tahun_produksi',
         'sta_lokasi',
     ];
-
 
     // Semua SILO alat berat
     public function silos(): HasMany
@@ -48,25 +46,33 @@ class AlatBerats extends Model
         )->where('is_active', true);
     }
 
-
     /**
-     * Apakah alat berat memiliki SILO yang masih aktif
+     * Apakah alat berat memiliki SILO yang masih aktif.
+     *
+     * Delegates to Silos::validity() (App\Domain\Compliance\ValueObjects\
+     * DocumentValidity) instead of comparing dates directly — this
+     * milestone (M2.5) retires the raw whereDate() comparison this method
+     * used to run.
      */
     public function hasActiveSilo(): bool
     {
-        return $this->silos()
-            ->whereDate('tanggal_expired', '>=', now())
-            ->exists();
+        return DocumentValidity::anyValid(
+            $this->silos()->get()->map(fn (Silos $silo) => $silo->validity())->all(),
+            now(),
+        );
     }
 
     /**
-     * Ambil SILO aktif (null jika tidak ada)
+     * Ambil SILO aktif (null jika tidak ada). Sama seperti sebelumnya:
+     * jika ada lebih dari satu SILO valid (perpanjangan dini, H2), yang
+     * paling dekat kedaluwarsa yang dipilih.
      */
     public function activeSilo(): ?Silos
     {
         return $this->silos()
-            ->whereDate('tanggal_expired', '>=', now())
-            ->orderBy('tanggal_expired')
+            ->get()
+            ->filter(fn (Silos $silo) => $silo->validity()->isValidOn(now()))
+            ->sortBy('tanggal_expired')
             ->first();
     }
 
@@ -89,10 +95,7 @@ class AlatBerats extends Model
             return null;
         }
 
-        return now()->diffInDays(
-            Carbon::parse($silo->tanggal_expired),
-            false
-        );
+        return $silo->validity()->remainingDaysOn(now());
     }
 
     public function latestSilo()
@@ -101,7 +104,6 @@ class AlatBerats extends Model
             ->orderByDesc('tanggal_expired')
             ->first();
     }
-
 
     /**
      * Apakah SILO akan expired dalam X hari

@@ -16,7 +16,7 @@ class CreateSios extends CreateRecord
         $operatorId = $this->data['operator_id'];
 
         $hasActiveSio = Sios::where('operator_id', $operatorId)
-            ->whereDate('tanggal_expired', '>=', now())
+            ->currentlyValid()
             ->exists();
 
         if ($hasActiveSio) {
@@ -29,5 +29,4 @@ class CreateSios extends CreateRecord
             $this->halt();
         }
     }
-
 }

@@ -11,12 +11,16 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Characterizes AutoEndExpiredAssignments exactly as it behaves today
- * (IMPLEMENTATION_PLAN.md Milestone M1.3). The tests prefixed test_c1_*
- * below CHARACTERIZE C1 — a known bug (TECHNICAL_AUDIT.md finding C1) —
- * and must NOT be read as a specification of correct behavior. Phase 2
- * (M2.2-M2.5) replaces this command's logic; when it does, these two
- * tests must be rewritten to assert the assignment stays active.
+ * As of Milestone M2.5, AutoEndExpiredAssignments is a thin wrapper
+ * around App\Application\Operations\AutoEndIneligibleAssignments — the
+ * tests prefixed test_c1_* below were rewritten at this point (as
+ * IMPLEMENTATION_PLAN.md M2.5 requires) to assert the corrected
+ * behavior, now that it runs end-to-end through the real console
+ * command, not just the Application-layer unit
+ * (tests/Feature/Application/Operations/AutoEndIneligibleAssignmentsTest.php,
+ * Milestone M2.4) or the Domain unit
+ * (tests/Unit/Domain/Operations/AssignmentEligibilityTest.php,
+ * Milestone M2.3). TECHNICAL_AUDIT.md finding C1 is closed.
  */
 class AutoEndExpiredAssignmentsTest extends TestCase
 {
@@ -80,17 +84,12 @@ class AutoEndExpiredAssignmentsTest extends TestCase
         $this->assertTrue((bool) $assignment->fresh()->is_active);
     }
 
-    // CHARACTERIZES C1 — DO NOT treat as correct behavior.
-    //
-    // TECHNICAL_AUDIT.md C1: the command checks "does an EXPIRED SIO exist
-    // for this operator?" instead of "does NO VALID SIO exist?". Expired
-    // documents are intentionally never deleted (kept for audit history),
-    // so any operator who has ever renewed their SIO has one expired SIO
-    // and one valid SIO on file at the same time. This proves the command
-    // ends a still-legitimate assignment in exactly that situation — the
-    // audit's own conclusion that this is "guaranteed to happen, not just
-    // possible," starting from the very first renewal in the system.
-    public function test_c1_assignment_incorrectly_ends_after_sio_renewal(): void
+    // TECHNICAL_AUDIT.md C1, resolved: an operator with one expired SIO
+    // (kept for audit history) and one renewed, valid SIO keeps their
+    // assignment active. Before Milestone M2.5, this command asked "does
+    // an EXPIRED SIO exist?" instead of "does NO VALID SIO exist?" and
+    // incorrectly ended this exact assignment.
+    public function test_c1_assignment_stays_active_after_sio_renewal(): void
     {
         $operator = Operators::factory()->create();
         // Old SIO, expired — kept on file for audit history.
@@ -112,19 +111,18 @@ class AutoEndExpiredAssignmentsTest extends TestCase
 
         $this->artisan('assignment:auto-end-expired');
 
-        // BUG: the operator has a currently valid SIO, so this assignment
-        // is legitimate — but the command ends it anyway, because it only
-        // checks whether an expired document *exists*, not whether a valid
-        // one is missing.
-        $this->assertFalse((bool) $assignment->fresh()->is_active);
+        // The operator has a currently valid SIO, so this assignment is
+        // legitimate and must remain active.
+        $this->assertTrue((bool) $assignment->fresh()->is_active);
     }
 
-    // CHARACTERIZES C1 — DO NOT treat as correct behavior. Same defect,
-    // SILO side. Silos::booted() forces the previous SILO to already be
-    // expired before a new one can be created for the same equipment
-    // (TECHNICAL_AUDIT.md H2), so "one expired + one valid" is in fact the
-    // *only* reachable state after any SILO renewal today.
-    public function test_c1_assignment_incorrectly_ends_after_silo_renewal(): void
+    // Same fix, SILO side. Silos::booted() still forces the previous SILO
+    // to already be expired before a new one can be created for the same
+    // equipment (TECHNICAL_AUDIT.md H2, closed in Milestone M2.7, not
+    // yet), so "one expired + one valid" remains the only reachable state
+    // after a SILO renewal today — but the command now resolves it
+    // correctly regardless.
+    public function test_c1_assignment_stays_active_after_silo_renewal(): void
     {
         $operator = Operators::factory()->create();
         Sios::factory()->for($operator, 'operator')->create(); // valid
@@ -146,9 +144,8 @@ class AutoEndExpiredAssignmentsTest extends TestCase
 
         $this->artisan('assignment:auto-end-expired');
 
-        // BUG: the equipment has a currently valid SILO — this assignment
-        // is legitimate, but the command ends it anyway, for the same
-        // reason as the SIO case above.
-        $this->assertFalse((bool) $assignment->fresh()->is_active);
+        // The equipment has a currently valid SILO, so this assignment is
+        // legitimate and must remain active.
+        $this->assertTrue((bool) $assignment->fresh()->is_active);
     }
 }

@@ -17,12 +17,17 @@ parameters:
 
 		-
 			message: "#^Call to an undefined method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:activeAssignment\\(\\)\\.$#"
-			count: 2
+			count: 1
 			path: app/Filament/Resources/AlatBeratsResource/RelationManagers/OperatorAssignmentsRelationManager.php
 
 		-
 			message: "#^Call to an undefined method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:hasActiveSilo\\(\\)\\.$#"
-			count: 2
+			count: 1
+			path: app/Filament/Resources/AlatBeratsResource/RelationManagers/OperatorAssignmentsRelationManager.php
+
+		-
+			message: "#^Parameter \\#1 \\$alatBerat of method App\\\\Application\\\\Operations\\\\AssignOperator\\:\\:checkEligibility\\(\\) expects App\\\\Models\\\\AlatBerats, Illuminate\\\\Database\\\\Eloquent\\\\Model given\\.$#"
+			count: 1
 			path: app/Filament/Resources/AlatBeratsResource/RelationManagers/OperatorAssignmentsRelationManager.php
 
 		-

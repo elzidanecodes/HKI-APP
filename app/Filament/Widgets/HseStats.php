@@ -2,16 +2,17 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget;
 use App\Models\AlatBerats;
-use App\Models\Operators;
 use App\Models\OperatorAlatAssignment;
-use App\Models\Sios;
+use App\Models\Operators;
 use App\Models\Silos;
+use App\Models\Sios;
+use Filament\Widgets\StatsOverviewWidget;
 
 class HseStats extends StatsOverviewWidget
 {
     protected static ?int $sort = 1;
+
     protected function getCards(): array
     {
         return [
@@ -21,8 +22,8 @@ class HseStats extends StatsOverviewWidget
                 'Total alat terdaftar',
                 'primary'
             )
-            ->url(route('filament.resources.alat-berats.index'))
-            ->openUrlInNewTab(),
+                ->url(route('filament.resources.alat-berats.index'))
+                ->openUrlInNewTab(),
 
             $this->makeCard(
                 'Operator',
@@ -30,8 +31,8 @@ class HseStats extends StatsOverviewWidget
                 'Total operator',
                 'success'
             )
-            ->url(route('filament.resources.operators.index'))
-            ->openUrlInNewTab(),
+                ->url(route('filament.resources.operators.index'))
+                ->openUrlInNewTab(),
 
             $this->makeCard(
                 'Assignment Aktif',
@@ -42,21 +43,21 @@ class HseStats extends StatsOverviewWidget
 
             $this->makeCard(
                 'SILO Expired',
-                + Silos::whereDate('tanggal_expired', '<', now())->count(),
+                +Silos::expired()->count(),
                 'SILO',
                 'danger',
             )
-            ->url(route('filament.resources.silos.index'))
-            ->openUrlInNewTab(),
+                ->url(route('filament.resources.silos.index'))
+                ->openUrlInNewTab(),
 
             $this->makeCard(
                 'SIO Expired',
-                Sios::whereDate('tanggal_expired', '<', now())->count(),
+                Sios::expired()->count(),
                 'SIO',
                 'danger',
             )
-            ->url(route('filament.resources.sios.index'))
-            ->openUrlInNewTab(),
+                ->url(route('filament.resources.sios.index'))
+                ->openUrlInNewTab(),
         ];
     }
 

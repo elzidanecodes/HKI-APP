@@ -10,17 +10,18 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
     {
-        // Disabled per IMPLEMENTATION_PLAN.md Phase 0 / M0.1 (TECHNICAL_AUDIT.md C1):
-        // this command's expiry check uses an inverted quantifier and ends valid
-        // assignments after every document renewal. Re-enable only after Phase 2
-        // (Domain Core) replaces its logic. See docs/interim/M0.1-manual-assignment-review.md
-        // for the manual process to follow while this is disabled.
-        // $schedule->command('assignment:auto-end-expired')->daily();
+        // Re-enabled per IMPLEMENTATION_PLAN.md Phase 2 / M2.5: the command
+        // now delegates to App\Application\Operations\
+        // AutoEndIneligibleAssignments, which asks the correct question
+        // (¬∃ valid document, not ∃ expired) — TECHNICAL_AUDIT.md C1 is
+        // closed. Disabled since Phase 0 / M0.1; see
+        // docs/interim/M0.1-manual-assignment-review.md for the interim
+        // manual process this replaces.
+        $schedule->command('assignment:auto-end-expired')->daily();
     }
 
     /**

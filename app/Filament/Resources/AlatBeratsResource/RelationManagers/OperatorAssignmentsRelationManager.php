@@ -2,22 +2,23 @@
 
 namespace App\Filament\Resources\AlatBeratsResource\RelationManagers;
 
+use App\Application\Operations\AssignOperator;
+use App\Application\Operations\EndAssignment;
+use App\Models\Operators;
+use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Table;
 use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Notifications\Notification;
-use App\Models\OperatorAlatAssignment;
-use App\Models\Sios;
 
 class OperatorAssignmentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'assignments';
 
     protected static ?string $recordTitleAttribute = 'tanggal_mulai';
-
 
     public static function form(Form $form): Form
     {
@@ -27,10 +28,7 @@ class OperatorAssignmentsRelationManager extends RelationManager
                 ->relationship(
                     'operator',
                     'nama_operator',
-                    fn ($query) =>
-                        $query->whereHas('sio', fn ($q) =>
-                            $q->whereDate('tanggal_expired', '>=', now())
-                        )
+                    fn ($query) => $query->whereHas('sio', fn ($q) => $q->currentlyValid())
                 )
                 ->searchable()
                 ->preload()
@@ -42,7 +40,6 @@ class OperatorAssignmentsRelationManager extends RelationManager
                 ->required(),
         ]);
     }
-
 
     public static function table(Table $table): Table
     {
@@ -82,55 +79,47 @@ class OperatorAssignmentsRelationManager extends RelationManager
                             || ! $alatBerat->hasActiveSilo();
                     })
 
-                    ->before(function (array $data, RelationManager $livewire, $action) {
+                    ->before(function (array $data, RelationManager $livewire, $action, AssignOperator $assignOperator) {
+                        // Single source of truth for the guard
+                        // (TECHNICAL_AUDIT.md §7 "Business Logic —
+                        // Terfragmentasi"; IMPLEMENTATION_PLAN.md M2.3/M2.5).
+                        // Only the check is delegated here — the actual
+                        // write still goes through mutateFormDataUsing()
+                        // below and Filament's own create(), unchanged, to
+                        // avoid inserting the record twice.
+                        //
+                        // $assignOperator is container-injected by Filament's
+                        // evaluate() mechanism (it resolves any type-hinted
+                        // class), not constructed here — this file must not
+                        // import App\Domain\* directly except enums/value
+                        // objects (ARCHITECTURE_BLUEPRINT.md §8.2), and
+                        // AssignmentEligibility is a domain service, not
+                        // either of those.
                         $alatBerat = $livewire->getOwnerRecord();
+                        $operator = Operators::findOrFail($data['operator_id']);
 
-                        // SILO harus aktif
-                        if (! $alatBerat->hasActiveSilo()) {
-                            Notification::make()
-                                ->title('SILO Tidak Aktif')
-                                ->body('Alat berat ini memiliki SILO yang sudah expired.')
-                                ->danger()
-                                ->send();
+                        $reasons = $assignOperator->checkEligibility($alatBerat, $operator, now());
 
-                            $action->halt();
+                        $messages = [
+                            'equipment_silo_not_active' => ['SILO Tidak Aktif', 'Alat berat ini memiliki SILO yang sudah expired.'],
+                            'equipment_already_assigned' => ['Alat Sedang Digunakan', null],
+                            'operator_already_assigned_elsewhere' => ['Operator Masih Bertugas', null],
+                            'operator_sio_not_active' => ['SIO Operator Tidak Aktif', null],
+                        ];
+
+                        foreach ($reasons as $reason) {
+                            [$title, $body] = $messages[$reason];
+
+                            $notification = Notification::make()->title($title)->danger();
+
+                            if ($body !== null) {
+                                $notification->body($body);
+                            }
+
+                            $notification->send();
                         }
 
-                        // Alat tidak boleh sedang digunakan
-                        if ($alatBerat->activeAssignment()->exists()) {
-                            Notification::make()
-                                ->title('Alat Sedang Digunakan')
-                                ->danger()
-                                ->send();
-
-                            $action->halt();
-                        }
-
-                        // Operator tidak boleh aktif di alat lain
-                        if (
-                            OperatorAlatAssignment::where('operator_id', $data['operator_id'])
-                                ->where('is_active', true)
-                                ->exists()
-                        ) {
-                            Notification::make()
-                                ->title('Operator Masih Bertugas')
-                                ->danger()
-                                ->send();
-
-                            $action->halt();
-                        }
-
-                        // SIO operator harus aktif
-                        if (
-                            ! Sios::where('operator_id', $data['operator_id'])
-                                ->whereDate('tanggal_expired', '>=', now())
-                                ->exists()
-                        ) {
-                            Notification::make()
-                                ->title('SIO Operator Tidak Aktif')
-                                ->danger()
-                                ->send();
-
+                        if ($reasons !== []) {
                             $action->halt();
                         }
                     })
@@ -157,10 +146,7 @@ class OperatorAssignmentsRelationManager extends RelationManager
                             ->required(),
                     ])
                     ->action(function ($record, array $data, RelationManager $livewire) {
-                        $record->update([
-                            'tanggal_selesai' => $data['tanggal_selesai'],
-                            'is_active' => false,
-                        ]);
+                        (new EndAssignment)->handle($record, Carbon::parse($data['tanggal_selesai']));
 
                         $livewire->getOwnerRecord()->refresh();
                     }),

@@ -4,30 +4,29 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SiosResource\Pages;
 use App\Models\Sios;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
-
-use Carbon\Carbon;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 
 class SiosResource extends Resource
 {
     protected static ?string $model = Sios::class;
 
     protected static ?string $navigationLabel = 'SIO';
+
     protected static ?string $pluralModelLabel = 'SIO';
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
-    
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -85,32 +84,11 @@ class SiosResource extends Resource
                     ->label('Berlaku Sampai')
                     ->date(),
 
-               BadgeColumn::make('status')
+                BadgeColumn::make('status')
                     ->label('Status')
-                    ->getStateUsing(function ($record) {
-
-                        $today = Carbon::today();
-                        $expired = Carbon::parse($record->tanggal_expired)->startOfDay();
-
-                        // SUDAH EXPIRED
-                        if ($expired->lt($today)) {
-                            return 'Expired';
-                        }
-
-                        // AKAN EXPIRED (antara hari ini s/d 30 hari ke depan)
-                        if ($expired->between(
-                            $today,
-                            $today->copy()->addDays(30),
-                            true // inclusive
-                        )) {
-                            return 'Akan Expired';
-                        }
-
-                        // MASIH AKTIF
-                        return 'Aktif';
-                    })
+                    ->getStateUsing(fn ($record) => $record->statusLabel())
                     ->colors([
-                        'danger'  => 'Expired',
+                        'danger' => 'Expired',
                         'warning' => 'Akan Expired',
                         'success' => 'Aktif',
                     ]),
@@ -137,14 +115,13 @@ class SiosResource extends Resource
             ]);
     }
 
-
     public static function getRelations(): array
     {
         return [
             //
         ];
     }
-    
+
     public static function getPages(): array
     {
         return [
@@ -152,5 +129,5 @@ class SiosResource extends Resource
             'create' => Pages\CreateSios::route('/create'),
             'edit' => Pages\EditSios::route('/{record}/edit'),
         ];
-    }    
+    }
 }
