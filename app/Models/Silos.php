@@ -25,13 +25,11 @@ class Silos extends Model implements LegalDocument
         'tanggal_terbit',
         'tanggal_expired',
         'file_path',
-        'is_active',
     ];
 
     protected $casts = [
         'tanggal_terbit' => 'date',
         'tanggal_expired' => 'date',
-        'is_active' => 'boolean',
     ];
 
     protected static function booted()

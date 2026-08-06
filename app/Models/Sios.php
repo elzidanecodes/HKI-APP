@@ -23,13 +23,11 @@ class Sios extends Model implements LegalDocument
         'tanggal_terbit',
         'tanggal_expired',
         'file_sio',
-        'is_active',
     ];
 
     protected $casts = [
         'tanggal_terbit' => 'date',
         'tanggal_expired' => 'date',
-        'is_active' => 'boolean',
     ];
 
     // Relasi ke operator

@@ -4,10 +4,11 @@ namespace App\Domain\Compliance\Enums;
 
 /**
  * Derived, never stored. TECHNICAL_AUDIT.md finding C2: the sios/silos
- * `is_active` column exists in schema but is never written by any code
- * path, so it silently disagrees with what the UI and guards actually
- * compute from dates. This enum is the single source of truth instead —
+ * `is_active` column existed in schema but was never written by any code
+ * path, so it silently disagreed with what the UI and guards actually
+ * computed from dates. This enum is the single source of truth instead —
  * always computed from a ValidityPeriod, never persisted as a column.
+ * The dead column itself was dropped in M2.6 (expand→migrate→contract).
  */
 enum DocumentStatus: string
 {
