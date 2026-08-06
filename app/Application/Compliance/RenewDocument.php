@@ -2,6 +2,7 @@
 
 namespace App\Application\Compliance;
 
+use App\Models\Silos;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -14,11 +15,10 @@ use Illuminate\Support\Facades\DB;
  * ARCHITECTURE_BLUEPRINT.md §4 Diagram 3.
  *
  * TECHNICAL_AUDIT.md H2: renewing a SILO before the existing one expires
- * should be allowed. This Action does not itself enforce any such
- * restriction — but Silos::booted() still blocks it at the persistence
- * layer today; that hook is only removed in Milestone M2.7. Until then,
- * an early SILO renewal through this Action still fails, characterized
- * by RenewDocumentTest::test_h2_early_silo_renewal_still_blocked_today().
+ * is now allowed — Milestone M2.7 removed the persistence-level guard
+ * that used to block it (Silos::booted()), so early renewal simply
+ * results in two overlapping valid SILO periods for the same equipment,
+ * matching ARCHITECTURE_BLUEPRINT.md §4 Diagram 3's state machine.
  *
  * Authorization is stubbed as always-allow: Identity/Policies don't exist
  * until Phase 3 (Milestone M3.3 replaces this with a real check).
@@ -30,10 +30,25 @@ final class RenewDocument
         $this->authorize();
 
         return DB::transaction(function () use ($document) {
+            $this->applyDefaultExpiry($document);
+
             $document->save();
 
             return $document;
         });
+    }
+
+    /**
+     * Silos::booted() previously computed this automatically
+     * (TECHNICAL_AUDIT.md M6); moved here per IMPLEMENTATION_PLAN.md
+     * Milestone M2.7. Sios has no equivalent — its expiry is entered
+     * directly (config/hse.php, TECHNICAL_AUDIT.md M9).
+     */
+    private function applyDefaultExpiry(Model $document): void
+    {
+        if ($document instanceof Silos && $document->getAttribute('tanggal_terbit') !== null) {
+            $document->tanggal_expired = SiloExpiryCalculator::expiresAt($document->tanggal_terbit);
+        }
     }
 
     private function authorize(): void

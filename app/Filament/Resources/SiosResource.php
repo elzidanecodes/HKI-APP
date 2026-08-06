@@ -44,6 +44,10 @@ class SiosResource extends Resource
                         ->label('Nomor SIO')
                         ->required(),
 
+                    DatePicker::make('tanggal_terbit')
+                        ->label('Tanggal Terbit')
+                        ->required(),
+
                     DatePicker::make('tanggal_expired')
                         ->label('Berlaku Sampai')
                         ->required(),
@@ -79,6 +83,11 @@ class SiosResource extends Resource
 
                 TextColumn::make('nomor_sio')
                     ->label('Nomor SIO'),
+
+                TextColumn::make('tanggal_terbit')
+                    ->label('Terbit')
+                    ->date()
+                    ->sortable(),
 
                 TextColumn::make('tanggal_expired')
                     ->label('Berlaku Sampai')

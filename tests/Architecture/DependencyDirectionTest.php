@@ -13,10 +13,11 @@ use RecursiveIteratorIterator;
  * requires: "aturan lapisan yang tidak ditegakkan mesin akan luntur dalam
  * hitungan bulan."
  *
- * app/Domain/ is empty as of this milestone. Rules 1-3 pass trivially
- * against the current (empty) tree and start catching real violations
- * the moment Milestone M2.2 onward adds Domain/Application code. Rule 4
- * has one tracked, pre-existing exception — see
+ * app/Domain/ is empty as of this milestone (M2.1). Rules 1-3 pass
+ * trivially against the current (empty) tree and start catching real
+ * violations the moment Milestone M2.2 onward adds Domain/Application
+ * code. Rule 4's one tracked exception (Silos::booted()) was removed in
+ * Milestone M2.7 — see
  * test_models_have_no_untracked_conditional_logic_in_booted_hooks().
  *
  * This uses plain PHPUnit rather than Pest Architecture or Deptrac (both
@@ -244,15 +245,10 @@ class DependencyDirectionTest extends TestCase
 
     public function test_models_have_no_untracked_conditional_logic_in_booted_hooks(): void
     {
-        // TRACKED EXCEPTION — Silos::booted() currently mixes persistence
-        // concerns with business logic (auto-computing tanggal_expired,
-        // enforcing the one-active-SILO-per-equipment guard). This is
-        // exactly what TECHNICAL_AUDIT.md flags (M6, M7, H2) and what
-        // IMPLEMENTATION_PLAN.md Milestone M2.7 removes. Once M2.7 lands,
-        // delete this exception — do not extend it to new files.
-        $trackedExceptions = [
-            'app/Models/Silos.php',
-        ];
+        // IMPLEMENTATION_PLAN.md Milestone M2.7 removed Silos::booted()
+        // entirely (TECHNICAL_AUDIT.md M6, M7, H2) — no tracked exceptions
+        // remain. Do not add one without an ADR (Blueprint P1/P9).
+        $trackedExceptions = [];
 
         $root = dirname(__DIR__, 2).'/';
         $violations = [];

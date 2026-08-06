@@ -38,19 +38,17 @@ class Sios extends Model implements LegalDocument
 
     /**
      * Single source of truth for this SIO's validity — replaces the raw
-     * date comparisons this milestone (M2.5) retires. Implements
+     * date comparisons Milestone M2.5 retired. Implements
      * App\Domain\Compliance\Contracts\LegalDocument (scaffolded in M2.2).
      *
-     * sios has no tanggal_terbit column (TECHNICAL_AUDIT.md M9) —
-     * created_at stands in as the period start, the same convention
-     * App\Application\Compliance\DocumentValidityMapper uses (M2.4). It's
-     * inert data ValidityPeriod never uses to gate validity.
+     * tanggal_terbit is a real column as of Milestone M2.7 (closing part
+     * of TECHNICAL_AUDIT.md M9); previously created_at stood in for it.
      */
     public function validity(): DocumentValidity
     {
         return DocumentValidity::forPeriod(
             ValidityPeriod::fromDates(
-                CarbonImmutable::instance($this->created_at),
+                CarbonImmutable::parse($this->tanggal_terbit),
                 CarbonImmutable::parse($this->tanggal_expired),
             ),
             config('hse.expiring_soon_threshold_days'),

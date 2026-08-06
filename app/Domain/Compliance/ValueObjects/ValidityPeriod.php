@@ -29,6 +29,24 @@ final class ValidityPeriod
         );
     }
 
+    /**
+     * Computes the expiry bound as an issue date plus a validity length,
+     * replacing Silos::booted()'s addYear() computation
+     * (TECHNICAL_AUDIT.md M6 — a regulatory rule hardcoded in a
+     * persistence hook). The validity length is a plain parameter, never
+     * resolved from application configuration here (Blueprint P4) — the
+     * caller (Application layer) resolves it and passes it in.
+     */
+    public static function startingFrom(CarbonInterface $startsAt, int $validityMonths): self
+    {
+        $startsAt = CarbonImmutable::instance($startsAt);
+
+        return new self(
+            $startsAt,
+            $startsAt->addMonths($validityMonths)->startOfDay(),
+        );
+    }
+
     public function isActiveOn(CarbonInterface $today): bool
     {
         return ! $this->expiresAt->lessThan($today);

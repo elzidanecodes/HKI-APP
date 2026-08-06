@@ -2,6 +2,7 @@
 
 namespace App\Application\Compliance;
 
+use App\Models\Silos;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -21,10 +22,25 @@ final class IssueDocument
         $this->authorize();
 
         return DB::transaction(function () use ($document) {
+            $this->applyDefaultExpiry($document);
+
             $document->save();
 
             return $document;
         });
+    }
+
+    /**
+     * Silos::booted() previously computed this automatically
+     * (TECHNICAL_AUDIT.md M6); moved here per IMPLEMENTATION_PLAN.md
+     * Milestone M2.7. Sios has no equivalent — its expiry is entered
+     * directly (config/hse.php, TECHNICAL_AUDIT.md M9).
+     */
+    private function applyDefaultExpiry(Model $document): void
+    {
+        if ($document instanceof Silos && $document->getAttribute('tanggal_terbit') !== null) {
+            $document->tanggal_expired = SiloExpiryCalculator::expiresAt($document->tanggal_terbit);
+        }
     }
 
     private function authorize(): void

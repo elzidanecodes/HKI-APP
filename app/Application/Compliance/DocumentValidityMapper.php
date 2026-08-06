@@ -15,9 +15,8 @@ use Carbon\CarbonImmutable;
  * both AssignOperator and AutoEndIneligibleAssignments (Milestone M2.4),
  * so it's extracted here rather than duplicated across both.
  *
- * Sios has no tanggal_terbit column (TECHNICAL_AUDIT.md M9) — created_at
- * stands in as the period start, which is inert data ValidityPeriod never
- * uses to gate validity (only the expiry bound does).
+ * tanggal_terbit is a real column on sios as of Milestone M2.7 (closing
+ * part of TECHNICAL_AUDIT.md M9); previously created_at stood in for it.
  */
 final class DocumentValidityMapper
 {
@@ -29,7 +28,7 @@ final class DocumentValidityMapper
         return $operator->sio()->get()
             ->map(fn ($sio) => DocumentValidity::forPeriod(
                 ValidityPeriod::fromDates(
-                    CarbonImmutable::instance($sio->created_at),
+                    CarbonImmutable::parse($sio->tanggal_terbit),
                     CarbonImmutable::parse($sio->tanggal_expired),
                 ),
                 config('hse.expiring_soon_threshold_days'),

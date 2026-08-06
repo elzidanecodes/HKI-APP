@@ -6,12 +6,10 @@ use App\Domain\Compliance\Contracts\LegalDocument;
 use App\Domain\Compliance\Enums\DocumentStatus;
 use App\Domain\Compliance\ValueObjects\DocumentValidity;
 use App\Domain\Compliance\ValueObjects\ValidityPeriod;
-use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\ValidationException;
 
 class Silos extends Model implements LegalDocument
 {
@@ -32,31 +30,6 @@ class Silos extends Model implements LegalDocument
         'tanggal_expired' => 'date',
     ];
 
-    protected static function booted()
-    {
-        static::saving(function ($silo) {
-
-            // set expired otomatis
-            if ($silo->tanggal_terbit) {
-                $silo->tanggal_expired = Carbon::parse($silo->tanggal_terbit)
-                    ->addYear()
-                    ->startOfDay();
-            }
-
-            // validasi: hanya 1 SILO aktif per alat
-            $hasActiveSilo = Silos::where('alat_berat_id', $silo->alat_berat_id)
-                ->whereDate('tanggal_expired', '>=', now())
-                ->when($silo->exists, fn ($q) => $q->where('id', '!=', $silo->id))
-                ->exists();
-
-            if ($hasActiveSilo) {
-                throw ValidationException::withMessages([
-                    'alat_berat_id' => 'Alat berat ini masih memiliki SILO yang aktif.',
-                ]);
-            }
-        });
-    }
-
     // Relasi ke alat berat
     public function alatBerat()
     {
@@ -65,7 +38,7 @@ class Silos extends Model implements LegalDocument
 
     /**
      * Single source of truth for this SILO's validity — replaces the raw
-     * date comparisons this milestone (M2.5) retires. Implements
+     * date comparisons Milestone M2.5 retired. Implements
      * App\Domain\Compliance\Contracts\LegalDocument (scaffolded in M2.2).
      */
     public function validity(): DocumentValidity
@@ -100,11 +73,9 @@ class Silos extends Model implements LegalDocument
         return ! $this->isExpired();
     }
 
-    public function scopeCurrentlyValid(Builder $query): Builder
-    {
-        return $query->whereDate('tanggal_expired', '>=', now());
-    }
-
+    // Still called by HseStats and ExpiredDocuments widgets — those
+    // callers are outside this milestone's scope, so the scope itself
+    // stays. A future milestone can migrate them to validity()/isExpired().
     public function scopeExpired(Builder $query): Builder
     {
         return $query->whereDate('tanggal_expired', '<', now());

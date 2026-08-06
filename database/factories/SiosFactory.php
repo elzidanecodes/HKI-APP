@@ -25,8 +25,9 @@ class SiosFactory extends Factory
         return [
             'operator_id' => Operators::factory(),
             'nomor_sio' => 'SIO-'.$this->faker->unique()->numberBetween(1000, 9999),
-            // Note: 'tanggal_terbit' is intentionally omitted — it exists in
-            // Sios::$fillable but has no matching column in the sios table.
+            // Real column as of Milestone M2.7 (closes part of
+            // TECHNICAL_AUDIT.md M9 — previously no matching column existed).
+            'tanggal_terbit' => $this->faker->dateTimeBetween('-11 months', 'now')->format('Y-m-d'),
             'tanggal_expired' => $this->faker->dateTimeBetween('now', '+1 year')->format('Y-m-d'),
             'file_sio' => null,
         ];
