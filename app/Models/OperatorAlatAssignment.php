@@ -17,6 +17,14 @@ class OperatorAlatAssignment extends Model
         'is_active',
     ];
 
+    // TECHNICAL_AUDIT.md M8 / IMPLEMENTATION_PLAN.md Milestone M5.1:
+    // these were plain strings, inconsistent with Sios/Silos, which cast
+    // their date columns.
+    protected $casts = [
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
+    ];
+
     public function operator()
     {
         return $this->belongsTo(Operators::class);

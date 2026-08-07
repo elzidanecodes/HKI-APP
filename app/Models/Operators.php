@@ -30,15 +30,22 @@ class Operators extends Model
     }
 
     // Relasi ke assignment
+    //
+    // Regression fix (TECHNICAL_AUDIT.md M2, IMPLEMENTATION_PLAN.md
+    // Milestone M5.1): without an explicit FK, Laravel infers one from
+    // this model's (plural) class name — "operators_id" — instead of the
+    // real "operator_id" column, so these relations were previously
+    // latent-broken. Explicit FK matches the pattern AlatBerats.php
+    // already uses.
     public function assignments()
     {
-        return $this->hasMany(OperatorAlatAssignment::class);
+        return $this->hasMany(OperatorAlatAssignment::class, 'operator_id', 'id');
     }
 
     // Assignment aktif
     public function activeAssignment()
     {
-        return $this->hasOne(OperatorAlatAssignment::class)
+        return $this->hasOne(OperatorAlatAssignment::class, 'operator_id', 'id')
             ->where('is_active', true);
     }
 }

@@ -2,14 +2,16 @@
 
 namespace App\Filament\Resources\SiosResource\Pages;
 
+use App\Filament\Concerns\HasStandardEditFormActions;
 use App\Filament\Resources\SiosResource;
+use Filament\Notifications\Notification;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Notifications\Notification;
-use Filament\Pages\Actions\ButtonAction;
 
 class EditSios extends EditRecord
 {
+    use HasStandardEditFormActions;
+
     protected static string $resource = SiosResource::class;
 
     protected function getActions(): array
@@ -31,22 +33,5 @@ class EditSios extends EditRecord
             ->title('Data SIO Diperbarui')
             ->body('Data SIO telah berhasil diperbarui.')
             ->success();
-    }
-
-    // Override tombol default di form action
-    protected function getFormActions(): array
-    {
-        return [
-            ButtonAction::make('submit')
-                ->label('Perbarui Data')
-                ->action('save') 
-                ->color('primary')
-                ->submit('update'),  
-
-                ButtonAction::make('cancel')
-                ->label('Batal')
-                ->url($this->getResource()::getUrl('index'))
-                ->color('secondary'),
-        ];
     }
 }

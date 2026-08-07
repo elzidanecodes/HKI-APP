@@ -2,14 +2,16 @@
 
 namespace App\Filament\Resources\OperatorsResource\Pages;
 
+use App\Filament\Concerns\HasStandardEditFormActions;
 use App\Filament\Resources\OperatorsResource;
 use Filament\Notifications\Notification;
 use Filament\Pages\Actions;
-use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditOperators extends EditRecord
 {
+    use HasStandardEditFormActions;
+
     protected static string $resource = OperatorsResource::class;
 
     protected function getActions(): array
@@ -32,22 +34,5 @@ class EditOperators extends EditRecord
             ->title('Data Operator Diperbarui')
             ->body('Data operator telah berhasil diperbarui.')
             ->success();
-    }
-
-    // Override tombol default di form action
-    protected function getFormActions(): array
-    {
-        return [
-            ButtonAction::make('submit')
-                ->label('Perbarui Data')
-                ->action('save') 
-                ->color('primary')
-                ->submit('update'),  
-
-                ButtonAction::make('cancel')
-                ->label('Batal')
-                ->url($this->getResource()::getUrl('index'))
-                ->color('secondary'),
-        ];
     }
 }

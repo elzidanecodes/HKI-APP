@@ -3,15 +3,17 @@
 namespace App\Filament\Resources\SilosResource\Pages;
 
 use App\Application\Compliance\SiloExpiryCalculator;
+use App\Filament\Concerns\HasStandardEditFormActions;
 use App\Filament\Resources\SilosResource;
 use Carbon\CarbonImmutable;
+use Filament\Notifications\Notification;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Notifications\Notification;
-use Filament\Pages\Actions\ButtonAction;
 
 class EditSilos extends EditRecord
 {
+    use HasStandardEditFormActions;
+
     protected static string $resource = SilosResource::class;
 
     protected function getActions(): array
@@ -51,22 +53,5 @@ class EditSilos extends EditRecord
             ->title('Data SILO Diperbarui')
             ->body('Data SILO telah berhasil diperbarui.')
             ->success();
-    }
-
-    // Override tombol default di form action
-    protected function getFormActions(): array
-    {
-        return [
-            ButtonAction::make('submit')
-                ->label('Perbarui Data')
-                ->action('save') 
-                ->color('primary')
-                ->submit('update'),  
-
-                ButtonAction::make('cancel')
-                ->label('Batal')
-                ->url($this->getResource()::getUrl('index'))
-                ->color('secondary'),
-        ];
     }
 }

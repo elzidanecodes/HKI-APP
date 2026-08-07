@@ -17,12 +17,6 @@ use App\Http\Controllers\DocumentController;
 |
 */
 
-Route::get('/', function () {
-    return view('/auth/login');
-});
-
-
-
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 // Access control for legal documents (TECHNICAL_AUDIT.md C5): 'auth'

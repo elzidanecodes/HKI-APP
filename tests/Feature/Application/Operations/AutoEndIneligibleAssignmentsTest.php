@@ -110,7 +110,10 @@ class AutoEndIneligibleAssignmentsTest extends TestCase
         $ended = $this->action()->handle(now());
 
         $this->assertSame(0, $ended);
-        $this->assertSame($originalEndDate, $assignment->fresh()->tanggal_selesai);
+        // tanggal_selesai is cast to a Carbon date as of Milestone M5.1
+        // (TECHNICAL_AUDIT.md M8) — was a raw string when this test was
+        // first written.
+        $this->assertSame($originalEndDate, $assignment->fresh()->tanggal_selesai->toDateString());
     }
 
     // TECHNICAL_AUDIT.md C1, resolved: an operator with one expired SIO

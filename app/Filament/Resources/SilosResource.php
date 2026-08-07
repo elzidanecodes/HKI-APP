@@ -15,7 +15,6 @@ use Filament\Resources\Table;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Builder;
 
 class SilosResource extends Resource
 {
@@ -126,12 +125,6 @@ class SilosResource extends Resource
                     ->openUrlInNewTab()
                     ->icon('heroicon-o-eye'),
             ]);
-    }
-
-    protected function getTableQuery(): Builder
-    {
-        return parent::getTableQuery()
-            ->orderByDesc('tanggal_expired');
     }
 
     public static function getRelations(): array
