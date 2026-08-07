@@ -2,11 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use Laravel\Jetstream\Features;
 
 class UserFactory extends Factory
 {
@@ -52,19 +50,19 @@ class UserFactory extends Factory
 
     /**
      * Indicate that the user should have a personal team.
+     *
+     * TECHNICAL_AUDIT.md L4 / IMPLEMENTATION_PLAN.md Milestone M5.2: this
+     * used to import App\Models\Team, which doesn't exist — Jetstream's
+     * Teams feature was never installed for this app
+     * (config/jetstream.php: Features::teams() is commented out). The
+     * Team::factory() branch was unreachable dead code guarded by
+     * Features::hasTeamFeatures(), which is always false here, so
+     * callers (EmailVerificationTest, PasswordConfirmationTest) were
+     * already only ever hitting the no-op branch below. This keeps that
+     * same no-op behavior without the dead import.
      */
     public function withPersonalTeam(): static
     {
-        if (! Features::hasTeamFeatures()) {
-            return $this->state([]);
-        }
-
-        return $this->has(
-            Team::factory()
-                ->state(function (array $attributes, User $user) {
-                    return ['name' => $user->name.'\'s Team', 'user_id' => $user->id, 'personal_team' => true];
-                }),
-            'ownedTeams'
-        );
+        return $this->state([]);
     }
 }
