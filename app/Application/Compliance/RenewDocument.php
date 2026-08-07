@@ -6,6 +6,7 @@ use App\Models\Silos;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Renews a legal document (SIO or SILO) by issuing a new one for the
@@ -25,6 +26,10 @@ use Illuminate\Support\Facades\DB;
  * (IMPLEMENTATION_PLAN.md Milestone M3.3), authorized as 'create' since
  * renewal mechanically creates a new document row (see class comment
  * above) — there is no distinct 'renew' Policy method.
+ *
+ * Logs at `info` after commit, not inside the transaction closure
+ * (ARCHITECTURE_BLUEPRINT.md §8.4) — IMPLEMENTATION_PLAN.md Milestone
+ * M4.4, closing TECHNICAL_AUDIT.md H5 for the Compliance module.
  */
 final class RenewDocument
 {
@@ -34,13 +39,22 @@ final class RenewDocument
     {
         $this->authorize('create', get_class($document));
 
-        return DB::transaction(function () use ($document) {
+        $document = DB::transaction(function () use ($document) {
             $this->applyDefaultExpiry($document);
 
             $document->save();
 
             return $document;
         });
+
+        Log::info('document.renewed', [
+            'document_type' => get_class($document),
+            'document_id' => $document->getKey(),
+            'attributes' => $document->only($document->getFillable()),
+            'user_id' => auth()->id(),
+        ]);
+
+        return $document;
     }
 
     /**

@@ -83,10 +83,12 @@ class OperatorAssignmentsRelationManager extends RelationManager
                         // Single source of truth for the guard
                         // (TECHNICAL_AUDIT.md §7 "Business Logic —
                         // Terfragmentasi"; IMPLEMENTATION_PLAN.md M2.3/M2.5).
-                        // Only the check is delegated here — the actual
-                        // write still goes through mutateFormDataUsing()
-                        // below and Filament's own create(), unchanged, to
-                        // avoid inserting the record twice.
+                        // This is a read-only pre-check for a friendly,
+                        // per-reason notification before the modal even
+                        // submits — the actual write below (->using())
+                        // re-checks the same eligibility inside its own
+                        // transaction with row locking (Milestone M4.2),
+                        // which is the real enforcement, not this one.
                         //
                         // $assignOperator is container-injected by Filament's
                         // evaluate() mechanism (it resolves any type-hinted
@@ -124,12 +126,24 @@ class OperatorAssignmentsRelationManager extends RelationManager
                         }
                     })
 
-                    ->mutateFormDataUsing(function (array $data, RelationManager $livewire) {
-                        return [
-                            ...$data,
-                            'alat_berat_id' => $livewire->getOwnerRecord()->id,
-                            'is_active' => true,
-                        ];
+                    // Regression fix (found during Milestone M4.4's
+                    // investigation): before this, the record was written
+                    // by Filament's own default create() after ->before()
+                    // passed — AssignOperator::handle() was never called,
+                    // so it never authorized, transacted, or row-locked
+                    // the write despite existing exactly to do that
+                    // (Milestone M2.4/M4.2). ->using() replaces Filament's
+                    // default write with the real Action instead of
+                    // running alongside it, so the record is still
+                    // written exactly once. mutateFormDataUsing() (which
+                    // only ever set alat_berat_id/is_active for the
+                    // default write path this replaces) is removed —
+                    // handle() sets both itself from its own parameters.
+                    ->using(function (array $data, RelationManager $livewire, AssignOperator $assignOperator) {
+                        $alatBerat = $livewire->getOwnerRecord();
+                        $operator = Operators::findOrFail($data['operator_id']);
+
+                        return $assignOperator->handle($alatBerat, $operator, Carbon::parse($data['tanggal_mulai']));
                     }),
             ])
 

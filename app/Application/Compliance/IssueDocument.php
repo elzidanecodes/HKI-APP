@@ -6,6 +6,7 @@ use App\Models\Silos;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Issues the first legal document (SIO or SILO) for an operator or piece
@@ -17,6 +18,13 @@ use Illuminate\Support\Facades\DB;
  * (IMPLEMENTATION_PLAN.md Milestone M3.3) — this is the
  * "PENEGAKAN SEBENARNYA" point per ARCHITECTURE_BLUEPRINT.md Diagram 2,
  * not the UI.
+ *
+ * Logs at `info` after commit, not inside the transaction closure
+ * (ARCHITECTURE_BLUEPRINT.md §8.4: side effects like this happen after
+ * commit, so a rolled-back save is never recorded as having happened) —
+ * IMPLEMENTATION_PLAN.md Milestone M4.4, closing TECHNICAL_AUDIT.md H5's
+ * "state-changing operations run with zero observability" for the
+ * Compliance module specifically.
  */
 final class IssueDocument
 {
@@ -26,13 +34,22 @@ final class IssueDocument
     {
         $this->authorize('create', get_class($document));
 
-        return DB::transaction(function () use ($document) {
+        $document = DB::transaction(function () use ($document) {
             $this->applyDefaultExpiry($document);
 
             $document->save();
 
             return $document;
         });
+
+        Log::info('document.issued', [
+            'document_type' => get_class($document),
+            'document_id' => $document->getKey(),
+            'attributes' => $document->only($document->getFillable()),
+            'user_id' => auth()->id(),
+        ]);
+
+        return $document;
     }
 
     /**

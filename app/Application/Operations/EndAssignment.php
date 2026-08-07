@@ -6,6 +6,7 @@ use App\Models\OperatorAlatAssignment;
 use Carbon\CarbonInterface;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Manually ends an active assignment — the same write the "End" row
@@ -27,6 +28,14 @@ use Illuminate\Support\Facades\DB;
  * updated, so a concurrent AssignOperator request checking this same
  * equipment/operator's active-assignment state (also lockForUpdate(),
  * same milestone) serializes against it rather than racing.
+ *
+ * Logs at `info` after commit, not inside the transaction closure
+ * (ARCHITECTURE_BLUEPRINT.md §8.4) — IMPLEMENTATION_PLAN.md Milestone
+ * M4.4, closing TECHNICAL_AUDIT.md H5 for Operations. Tagged
+ * `reason: manual` to distinguish this from AutoEndIneligibleAssignments'
+ * `assignment.auto_ended` notice, matching the manual-vs-automatic
+ * distinction ARCHITECTURE_BLUEPRINT.md §4 Diagram 3 already draws
+ * between "Selesai" and "DiakhiriOtomatis".
  */
 final class EndAssignment
 {
@@ -37,7 +46,7 @@ final class EndAssignment
         $this->authorize('update', $assignment->alatBerat()->firstOrFail());
         $this->authorize('update', $assignment->operator()->firstOrFail());
 
-        return DB::transaction(function () use ($assignment, $tanggalSelesai) {
+        $locked = DB::transaction(function () use ($assignment, $tanggalSelesai) {
             $locked = OperatorAlatAssignment::whereKey($assignment->getKey())->lockForUpdate()->firstOrFail();
 
             $locked->update([
@@ -47,5 +56,16 @@ final class EndAssignment
 
             return $locked;
         });
+
+        Log::info('assignment.ended', [
+            'assignment_id' => $locked->getKey(),
+            'alat_berat_id' => $locked->alat_berat_id,
+            'operator_id' => $locked->operator_id,
+            'tanggal_selesai' => $tanggalSelesai->toDateString(),
+            'user_id' => auth()->id(),
+            'reason' => 'manual',
+        ]);
+
+        return $locked;
     }
 }

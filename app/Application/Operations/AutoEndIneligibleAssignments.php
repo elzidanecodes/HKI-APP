@@ -7,6 +7,7 @@ use App\Domain\Compliance\ValueObjects\DocumentValidity;
 use App\Models\OperatorAlatAssignment;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Ends every active assignment whose operator has no currently valid SIO
@@ -41,6 +42,19 @@ use Illuminate\Support\Facades\DB;
  * a single transaction, matching the current command's implicit
  * behavior of one run producing one consistent set of changes. Row
  * locking is deferred to Phase 4 / M4.2.
+ *
+ * Milestone M4.4 (TECHNICAL_AUDIT.md H5): this is the unattended
+ * automation the audit singled out — "sistem merusak data secara diam-diam,
+ * setiap malam, tanpa jejak apapun." ARCHITECTURE_BLUEPRINT.md §8.8 maps
+ * this Action to three log lines: `info` when the sweep starts (how many
+ * active assignments will be evaluated), `notice` per assignment actually
+ * ended (with the specific reason — SIO, SILO, or both), and `info` when
+ * the sweep completes (processed vs. ended counts). Logging happens
+ * inside the transaction here, unlike the other Actions: this is one
+ * batch operation over N rows, and the per-row `notice` is itself part of
+ * what "jumlah terubah" means at completion, not a side effect to defer —
+ * there is no meaningful "commit, then log" split for a summary of the
+ * work the transaction just did.
  */
 final class AutoEndIneligibleAssignments
 {
@@ -52,9 +66,16 @@ final class AutoEndIneligibleAssignments
     public function handle(CarbonInterface $today): int
     {
         return DB::transaction(function () use ($today) {
+            $activeAssignments = OperatorAlatAssignment::where('is_active', true)->get();
+
+            Log::info('scheduler.auto_end_ineligible_assignments.started', [
+                'active_assignment_count' => $activeAssignments->count(),
+                'today' => $today->toDateString(),
+            ]);
+
             $ended = 0;
 
-            OperatorAlatAssignment::where('is_active', true)->get()->each(function (OperatorAlatAssignment $assignment) use ($today, &$ended) {
+            $activeAssignments->each(function (OperatorAlatAssignment $assignment) use ($today, &$ended) {
                 $operatorSioValid = DocumentValidity::anyValid($this->validities->forOperatorSios($assignment->operator()->firstOrFail()), $today);
                 $equipmentSiloValid = DocumentValidity::anyValid($this->validities->forEquipmentSilos($assignment->alatBerat()->firstOrFail()), $today);
 
@@ -67,8 +88,25 @@ final class AutoEndIneligibleAssignments
                     'is_active' => false,
                 ]);
 
+                $reasons = array_filter([
+                    $operatorSioValid ? null : 'operator has no currently valid SIO',
+                    $equipmentSiloValid ? null : 'equipment has no currently valid SILO',
+                ]);
+
+                Log::notice('assignment.auto_ended', [
+                    'assignment_id' => $assignment->getKey(),
+                    'alat_berat_id' => $assignment->alat_berat_id,
+                    'operator_id' => $assignment->operator_id,
+                    'reasons' => array_values($reasons),
+                ]);
+
                 $ended++;
             });
+
+            Log::info('scheduler.auto_end_ineligible_assignments.completed', [
+                'processed' => $activeAssignments->count(),
+                'ended' => $ended,
+            ]);
 
             return $ended;
         });

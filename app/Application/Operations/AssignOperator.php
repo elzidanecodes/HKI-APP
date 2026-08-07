@@ -12,14 +12,19 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Assigns an operator to a piece of equipment — replacing the four
  * guards currently duplicated inside
  * OperatorAssignmentsRelationManager's ->before() closure
  * (TECHNICAL_AUDIT.md §7) with a single call to AssignmentEligibility
- * (Milestone M2.3). Not yet wired into that RelationManager — the
- * strangler cutover happens in Milestone M2.5.
+ * (Milestone M2.3). checkEligibility() was wired into that RelationManager's
+ * ->before() guard at Milestone M2.5; handle() itself (the actual write,
+ * with authorization/transaction/row-locking) was left unwired until a
+ * regression found during Milestone M4.4's investigation — the modal was
+ * still falling through to Filament's own default create() afterward,
+ * which bypassed all three. Now wired via ->using().
  *
  * Authorization is enforced against both entities involved
  * (IMPLEMENTATION_PLAN.md Milestone M3.3): assigning an operator to
@@ -56,6 +61,10 @@ use Illuminate\Support\Facades\DB;
  * this Application Action (ARCHITECTURE_BLUEPRINT.md §8.2), but may not
  * import App\Domain\Operations\Services\AssignmentEligibility directly,
  * which is not an enum or value object.
+ *
+ * handle() logs at `info` after commit, not inside the transaction
+ * closure (ARCHITECTURE_BLUEPRINT.md §8.4) — IMPLEMENTATION_PLAN.md
+ * Milestone M4.4, closing TECHNICAL_AUDIT.md H5 for Operations.
  */
 final class AssignOperator
 {
@@ -97,7 +106,7 @@ final class AssignOperator
         $this->authorize('update', $alatBerat);
         $this->authorize('update', $operator);
 
-        return DB::transaction(function () use ($alatBerat, $operator, $tanggalMulai) {
+        $assignment = DB::transaction(function () use ($alatBerat, $operator, $tanggalMulai) {
             $reasons = $this->checkEligibility($alatBerat, $operator, CarbonImmutable::now(), lockForUpdate: true);
 
             if ($reasons !== []) {
@@ -111,5 +120,15 @@ final class AssignOperator
                 'is_active' => true,
             ]);
         });
+
+        Log::info('assignment.created', [
+            'assignment_id' => $assignment->getKey(),
+            'alat_berat_id' => $alatBerat->id,
+            'operator_id' => $operator->id,
+            'tanggal_mulai' => $tanggalMulai->toDateString(),
+            'user_id' => auth()->id(),
+        ]);
+
+        return $assignment;
     }
 }
